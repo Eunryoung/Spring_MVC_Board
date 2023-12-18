@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!-- 마이바티스에서 접근할 사용자 정의 클래스 -->
+	<typeAliases>
+		<!-- <typeAlias type="클래스타입지정" alias="별칭지정"> -->
+		<typeAlias type="com.itwillbs.mvc_board.vo.MemberVO" alias="member"/>
+	</typeAliases>
+</configuration>
+  
