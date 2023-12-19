@@ -33,14 +33,6 @@
 </style>
 </head>
 <body>
-	<%-- 로그인 하지 않은 사용자 접근 시 "회원만 글쓰기 가능합니다." 출력 후 로그인 페이지로 이동 --%>
-	<c:if test="${empty sessionScope.sId }">
-		<script type="text/javascript">
-			alert("회원만 글쓰기가 가능합니다.\n로그인 페이지로 이동합니다.");
-			location.href = "MemberLoginForm.me";
-		</script>
-	</c:if>
-	
 	<header>
 		<%-- inc/top.jsp 페이지 삽입(jsp:include 액션태그 사용 시 / 경로는 webapp 가리킴) --%>
 		<jsp:include page="../inc/top.jsp"></jsp:include>
@@ -48,7 +40,10 @@
 	<!-- 게시판 등록 -->
 	<article id="writeForm">
 		<h1>게시판 글 등록</h1>
-		<form action="BoardWritePro.bo" name="writeForm" method="post">
+		<%-- 파일 업로드 처리를 위해 form 태그 enctype 속성값을 "multipart/form-data" 로 설정 --%>
+		<%-- 모든 파라미터는 request 객체를 통한 직접 접근 불가능해진다! --%>
+		<%-- 미설정 시 기본값 : application/x-www-form-urlencoded --%>
+		<form action="BoardWritePro" name="writeForm" method="post" enctype="multipart/form-data">
 			<table>
 				<tr>
 					<td class="write_td_left"><label for="board_name">글쓴이</label></td>
@@ -65,6 +60,19 @@
 					<td class="write_td_left"><label for="board_content">내용</label></td>
 					<td class="write_td_right">
 						<textarea id="board_content" name="board_content" rows="15" cols="40" required="required"></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td class="write_td_left"><label for="file1">파일첨부</label></td>
+					<td class="write_td_right">
+						<%-- 파일 첨부 형식은 input 태그 type="file" 속성 활용 --%>
+						<%-- 한 번에 하나의 파일 선택 가능 --%>
+						<input type="file" name="file1" />
+						<input type="file" name="file2" />
+						<input type="file" name="file3" />
+						<br> --------------- <br>
+						<%-- 한 번에 복수개의 파일 선택 시 multiple 속성 추가 --%>
+						<input type="file" name="file" multiple />
 					</td>
 				</tr>
 			</table>

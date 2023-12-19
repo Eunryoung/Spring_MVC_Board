@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 매핑에 사용될 BoardMapper 인터페이스를 namespace 속성에 지정 필수! -->
+<mapper namespace="com.itwillbs.mvc_board.mapper.BoardMapper">
+	
+</mapper>

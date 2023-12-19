@@ -149,15 +149,24 @@
 					<th>아이디</th>
 					<td>
 						<%-- 아이디 편집 불가(readonly 필수! disabled 는 파라미터 전송에서 제외됨) --%>
-<%-- 						<input type="text" name="id" value="${member.id }" readonly>(변경불가) --%>
+						<input type="text" name="id" value="${member.id }" readonly>(변경불가)
 						<%-- 만약, 아이디 파라미터 전송도 불필요할 경우 데이터만 표시 --%>
-						${member.id }(변경불가)
+<%-- 						${member.id }(변경불가) --%>
 					</td>
 				</tr>
 				<tr>
 					<th>기존 비밀번호</th>
 					<td>
-						<input type="password" name="passwd" placeholder="8 ~ 16글자" required>
+						<%-- 만약, 현재 세션 아이디가 관리자이면서, 수정할 아이디가 관리자가 아닐 경우 --%>
+						<%-- 회원정보수정폼에서 기존 패스워드 입력창 제거(생략) => (입력불필요) 출력 --%>
+						<c:choose>
+							<c:when test="${sessionScope.sId eq 'admin' and param.id ne 'admin' }">
+								(입력불필요)								
+							</c:when>
+							<c:otherwise>
+								<input type="password" name="passwd" placeholder="8 ~ 16글자" required>
+							</c:otherwise>
+						</c:choose>
 						<span id="checkPasswdResult"></span>
 					</td>
 				</tr>
