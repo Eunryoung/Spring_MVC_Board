@@ -88,7 +88,7 @@ public class BoardController {
 //		String saveDir = request.getServletContext().getRealPath(uploadDir); // 또는
 		String saveDir = session.getServletContext().getRealPath(uploadDir); 
 		// => session에도 동일한 추출 작업 가능(c.f. getServletContext() : application 객체 가져오는 것)
-//		System.out.println("실제 업로드 경로 : " + saveDir);
+		System.out.println("실제 업로드 경로 : " + saveDir);
 		// => D:\Spring\workspace_spring5\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Spring_MVC_Board\resources\ upload
 		
 		// 업로드 파일들에 대한 관리의 용이성을 증대시키기 위해
@@ -127,8 +127,9 @@ public class BoardController {
 		
 		// 4. 기존 업로드 경로(실제 경로)에 서브디렉토리(날짜 경로) 결합
 		saveDir += File.separator + subDir; // File.separator 대신 / 또는 \ 지정도 가능 (saveDir += "\";)
-//		System.out.println(saveDir);
+		System.out.println(saveDir);
 		// => D:\Spring\workspace_spring5\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Spring_MVC_Board\resources\ upload\2023/12/19
+
 
 		
 		try {
@@ -148,9 +149,9 @@ public class BoardController {
 		MultipartFile mFile2 = board.getFile2();
 		MultipartFile mFile3 = board.getFile3();
 		// MultipartFile 객체의 getOriginalFilename() 메서드 호출 시 업로드 된 파일명 리턴
-		System.out.println("원본파일명 1 : " + mFile1.getOriginalFilename());
-		System.out.println("원본파일명 2 : " + mFile2.getOriginalFilename());
-		System.out.println("원본파일명 3 : " + mFile3.getOriginalFilename());
+		System.out.println("원본파일명 1 : " + mFile1.getOriginalFilename()); // 원본파일명 1 : hs_err_pid16752.log
+		System.out.println("원본파일명 2 : " + mFile2.getOriginalFilename()); // 원본파일명 2 : hs_err_pid28940.log
+		System.out.println("원본파일명 3 : " + mFile3.getOriginalFilename()); // 원본파일명 3 : license.txt
 
 		// ----------------------------------------
 		// [ 파일명 중복방지 대책 ]
