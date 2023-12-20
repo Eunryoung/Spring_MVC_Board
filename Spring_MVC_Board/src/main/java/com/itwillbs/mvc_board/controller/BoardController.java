@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -19,10 +20,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.itwillbs.mvc_board.service.BoardService;
 import com.itwillbs.mvc_board.vo.BoardVO;
+import com.itwillbs.mvc_board.vo.PageInfo;
 
 @Controller
 public class BoardController {
@@ -160,12 +163,160 @@ public class BoardController {
 		// - 난수 생성 라이브러리를 활용하거나 UUID 클래스 활용하여 생성
 		//   => UUID : 현재 시스템(서버)에서 랜덤 ID 값을 추출하여 제공하는 클래스
 		// 	    (UUID : Universally Unique Identifiers 의 약자로 범용 고유 식별자라고 함)
-		String uuid = UUID.randomUUID().toString(); // 리턴타입이 String이 아니므로 toString() 메서드 호출
-		System.out.println("uuid : " + uuid); // uuid : 4fd35384-ccda-4c24-b608-f057d1268ae7
+//		String uuid = UUID.randomUUID().toString(); // 리턴타입이 String이 아니므로 toString() 메서드 호출
+//		System.out.println("uuid : " + uuid); // uuid : 4fd35384-ccda-4c24-b608-f057d1268ae7
+		
+		// 생성된 UUID 값을 원본 파일명 앞에 결합(파일명과 구분을 위해 구분자로 "_" 기호 결합)
+		// e.g. 4fd35384-ccda-4c24-b608-f057d1268ae7_123.jpg
+		// => 단, 파일명 길이 조절을 위해 임의로 UUID 중 앞 8자리 문자열만 추출하여 활용
+//		System.out.println("uuid : " + uuid); // uuid : 24fdc547-d00f-4f06-a24e-882067eeadf0
+//		System.out.println("uuid : " + uuid.substring(0, 8)); // 24fdc547
+//		System.out.println("uuid : " + uuid.substring(0, 8) + "_" + mFile1.getOriginalFilename()); // 24fdc547_license.txt
+		// => 서버에 저장할 파일 이름으로 사용할 것임
+		
+		
+		// 생성된 UUID 값(8자리)과 업로드 할 파일명을 결합하여 BoardVO 객체에 저장
+		
+//		System.out.println(board.getBoard_file1()); // DB에 저장할 용도로 쓰는 멤버변수(MultipartFile X)
+		// => file은 String 타입 변수. String 타입의 기본 값은 ""이 아닌 null
+		//    첨부파일 선택하지 않을 경우 null 값이 넘어온다
+		// => 테이블 생성 시 NN 조건 걸었는데 null 값이 넘어오면 제약조건 위반
+		
+		// => 단, 업로드 파일이 선택되지 않은 항목은 파일명이 null 값이 전달되므로
+		//    BoardVO 객체의 파일명 멤버변수 기본값으로 널스트링("") 처리
+		board.setBoard_file1("");
+		board.setBoard_file2("");
+		board.setBoard_file3("");
+		board.setBoard_file("");
+		
+//		String fileName1 = uuid + "_" + mFile1.getOriginalFilename();
+		String fileName1 = UUID.randomUUID().toString().substring(0, 8) + "_" + mFile1.getOriginalFilename(); // 변수 필요없는 경우 쓰지않아도 됨
+		String fileName2 = UUID.randomUUID().toString().substring(0, 8) + "_" + mFile2.getOriginalFilename(); // 변수 필요없는 경우 쓰지않아도 됨
+		String fileName3 = UUID.randomUUID().toString().substring(0, 8) + "_" + mFile3.getOriginalFilename(); // 변수 필요없는 경우 쓰지않아도 됨
+//		System.out.println(fileName1);
+//		System.out.println(fileName2);
+//		System.out.println(fileName3);
+		// => 변수 선언하지않고 UUID.randomUUID().toString()의 형태로 쓸 경우 한 번에 세가지 파일을 업로드할때 난수가 세번 발생하므로
+		//    uuid 값이 다 다름(같은 작성글인데 굳이 다를 이유가?)
+		// => c.f. uuid 변수를 선언해 같은 값이 나오는데 만약 첨부파일명이 중복이라면 서버에 저장하는 파일명도 중복되므로 문제발생
+		// => 첨부파일 3을 첨부하지않았으나 기본값으로 널스트링을 셋해놔서(board.setBoard_file3("")) 파일이 없으나 난수 발생해 문제 
+		
+		// 파일이 존재할 경우 BoardVO 객체에 서브디렉터리명(subDir)과 함께 파일명 저장
+		// ex) 2023/12/19/ef3e51e8_1.jpg
+		// 파일명에 같이 서브디렉터리명을 결합해야 나중에 조회하기 쉬움
+		if(!mFile1.getOriginalFilename().equals("")) {
+			board.setBoard_file1(subDir + "/" + fileName1);
+		}
+		
+		if(!mFile2.getOriginalFilename().equals("")) {
+			board.setBoard_file2(subDir + "/" + fileName2);
+		}
+		
+		if(!mFile3.getOriginalFilename().equals("")) {
+			board.setBoard_file3(subDir + "/" + fileName3);
+		}
+		System.out.println("실제 업로드 파일명 1 : " + board.getBoard_file1());
+		System.out.println("실제 업로드 파일명 2 : " + board.getBoard_file2());
+		System.out.println("실제 업로드 파일명 3 : " + board.getBoard_file3());
+		
+		// ----------------------------------------------------------------------
+		// BoardService - registBoard() 메서드 호출하여 게시물 등록 작업 요청
+		// => 파라미터 : BoardVO 객체   리턴타입 : int(insertCount)
+		int insertCount = service.registBoard(board); 
+//		System.out.println("등록된 게시물 번호 : " + board.getBoard_num());
+		// Mapper에서 selectkey 태그를 통해 조회 결과값을 BoardVO 객체에 저장했으므로
+		// 해당 객체를 참조하는 현재 클래스에서도 조회된 값에 접근 가능
+		// => 참조형변수(객체) 전달했으므로 주소값 넘어가서 같은 주소를 공유하게 되어 
+		//    BoardMapper.xml의 쿼리에서 전달한 값이 출력된다(같은 객체 공유하므로 반영됨)
+		
+		// 게시물 등록 작업 요청 결과 판별
+		if(insertCount > 0) { // 성공 시
+			try {
+				// 업로드 된 파일들은 MultipartFile 객체에 의해 임시 디렉터리에 저장되며
+				// 글쓰기 작업 성공 시 임시 디렉터리에서 실제 디렉터리로 이동 작업이 필요
+				// => MultipartFile 객체의 transferTo() 메서드를 호출하여 실제 위치로 이동(=> 이 자체가 이미 업로드)
+				// => 파일이 선택되지 않은 경우(앞서 파일명을 널스트링으로 세팅해둠) 이동이 불가능(예외 발생)하므로 제외시켜야함
+				// => transferTo() 메서드 파라미터로 java.io.File 타입 객체 전달
+//				mFile1.transferTo(new File(saveDir, fileName1));
+//				mFile2.transferTo(new File(saveDir, fileName2));
+//				mFile3.transferTo(new File(saveDir, fileName3)); 
+				// => IOException 발생(try/catch 처리)
+				
+				// => 세번째 첨부파일은 선택을 하지않았으나 객체가 만들어져서 지정 위치에 파일 만들어줌
+				//    파일이 존재하는 경우만 실행되도록 각각 조건문 걸어줌
+				if(!mFile1.getOriginalFilename().equals("")) {
+					mFile1.transferTo(new File(saveDir, fileName1));
+				}
+				if(!mFile2.getOriginalFilename().equals("")) {
+					mFile2.transferTo(new File(saveDir, fileName2));
+				}
+				if(!mFile3.getOriginalFilename().equals("")) {
+					mFile3.transferTo(new File(saveDir, fileName3));
+				}
+				
+
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			// 글목록(BoardList) 서블릿 리다이렉트
+			return "redirect:/BoardList";
+		} else { // 실패 시
+			// "글쓰기 실패!" 메시지 처리(fail_back)
+			model.addAttribute("msg", "글쓰기 실패");
+			return "fail_back";
+			
+		}
 		
 		
 		
-		return "";
 	}
 	
+	// "BoardList" 서블릿 요청에 대한 글 목록 조회 비즈니스 로직 처리
+	// => 파라미터 : 검색타입(searchType) => 기본값 널스트링("") 설정
+	//               검색어(searchKeyword) => 기본값 널스트링("") 설정
+	//               페이지번호(pageNum) => 기본값 1 설정
+	@GetMapping("BoardList")
+	public String list(
+			@RequestParam(defaultValue = "") String searchType,
+			@RequestParam(defaultValue = "") String searchKeyword,
+			@RequestParam(defaultValue = "1") int pageNum,
+			Model model) {
+//		System.out.println("검색타입 : " + searchType);
+//		System.out.println("검색어 : " + searchKeyword);
+//		System.out.println("페이지번호 : " + pageNum);
+		// ----------------------------------------------------------------
+		// 페이징 처리를 위해 조회 목록 갯수 조절 시 사용될 변수 선언
+		int listLimit = 10;
+		int startRow = (pageNum - 1) * listLimit;
+		// --------------------------------------------------------------------
+		// BoardService - getBoardList() 메서드 호출하여 게시물 목록 조회 요청
+		// => 파라미터 : 검색타입, 검색어, 시작행번호, 게시물 목록갯수
+		// => 리턴타입 : List<BoardVO>(boardList)
+		List<BoardVO> boardList = service.getBoardList(searchType, searchKeyword, startRow, listLimit);
+		// ------------------------------------------------------------------------------
+		// 페이징 처리를 위한 계산 작업
+		// BoardService - getBoardListCount() 메서드 호출하여 전체 게시물 목록 갯수 조회 요청
+		// => 파라미터 : 검색타입, 검색어
+		// => 리턴타입 : int(listCount)
+		int listCount = service.getBoardListCount(searchType, searchKeyword);
+		int pageListLimit = 3; // 임시) 페이지 당 페이지 번호 갯수를 3개로 지정
+		int maxPage = listCount / listLimit + (listCount % listLimit > 0 ? 1 : 0);
+		int startPage = (pageNum - 1) / pageListLimit * pageListLimit + 1;
+		int endPage = startPage + pageListLimit - 1;
+		if(endPage > maxPage) {
+			endPage = maxPage;
+		}
+		
+		// 계산된 페이징 처리 관련 값을 PageInfo 객체에 저장
+		PageInfo pageInfo = new PageInfo(listCount, pageListLimit, maxPage, startPage, endPage);
+		// ---------------------------------------------------------------------------------------
+		// 게시물 목록과 페이징 정보 저장
+		model.addAttribute("boardList", boardList);
+		model.addAttribute("pageInfo", pageInfo);
+		
+		return "board/board_list";
+	}
 }

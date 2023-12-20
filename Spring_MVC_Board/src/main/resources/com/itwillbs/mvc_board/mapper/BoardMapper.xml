@@ -4,5 +4,136 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <!-- 매핑에 사용될 BoardMapper 인터페이스를 namespace 속성에 지정 필수! -->
 <mapper namespace="com.itwillbs.mvc_board.mapper.BoardMapper">
+	<!-- 게시물 등록 작업 - INSERT -->
+	<!-- 
+	단, 글번호(board_num) 컬럼이 일반 정수 컬럼이며 자동 증가 컬럼이 아니므로 직접 글번호 생성 필요
+	이 때, 기존 게시물 번호 중 가장 큰 번호를 조회 후 + 1 값을 새 글 번호, 참조글 번호로 사용
+	=> INSERT, UPDATE 태그 등에서 SELECT 구문 조회 결과값을 활용해야할 경우
+	   <selectKey> 태그를 <insert> 등의 태그 내에서 사용하여 작업 전 또는 후에 값 조회 가능
+	   - keyProperty 속성 : 조회 결과값을 저장할 속성(VO 객체 변수명 지정 가능)
+	                        => 조회 후 자동으로 해당 객체의 변수(또는 일반 변수)에 저장됨
+	                        => BoardVO 객체를 전달받았으므로 board_num 변수 직접 지정 가능
+	   - resultType 속성 : 조회 결과에 대한 데이터 타입
+	   - order 속성 : 작업 수행 시점 지정(작업 전 조회 수행 시 BEFORE, 작업 후 조회 수행 시 AFTER)
+	=> 주의! MAX() 함수 사용 시 대상이 존재하지 않을 경우 NULL 값이 리턴되므로 사용 시 오류 발생함
+	   따라서, IFNULL 함수 추가(NULL 일 때 기본값 0 로 설정)
+	=> 전달받은 BoardVO 객체의 멤버변수에 selectkey 조회 결과값을 저장할 경우
+	   해당 객체를 공유하는 다른 클래스에서 조회된 값 사용 가능
+	-->
+	<insert id="insertBoard">
+		<selectKey keyProperty="board_num" resultType="int" order="BEFORE"> 
+		<!-- 셀렉트를 주 쿼리 실행전에 하고 조회 결과는 int고 board_num이라는 이름으로 넘겨라 -->
+		<!-- delete에는 없고 insert, update에는 있음 -->
+		<!-- 주된 쿼리 적기전에 셀렉트 구문이 필요할 경우 사용 -->
+		<!-- c.f. 참조형타입 변수(객체)를 넘겼으므로 참조 주소가 넘어감 -->
+		<!-- 	  Controller에서 출력 시 동일한 결과가 출력 됨 -->
+			SELECT IFNULL(MAX(board_num), 0) -- null이 아닌 경우 0으로 지정해야 INSERT 구문에서 +1 할 것이므로 첫 글이 1번이 된다 
+			FROM board
+		</selectKey>
+		INSERT INTO board
+		VALUES(
+			#{board_num} + 1 -- 미리 조회된 게시물 번호 + 1 값 사용
+			, #{board_name}
+			, #{board_subject}
+			, #{board_content}
+			, #{board_file1}
+			, #{board_file2}
+			, #{board_file3}
+			, #{board_file}
+			, #{board_num} + 1 -- board_re_ref(board_num 값과 동일하게 지정)
+			, 0
+			, 0
+			, 0
+			, now()
+			, #{writer_ip}
+		)
+	</insert>
 	
+	
+	<!-- 글 목록 조회 - SELECT -->
+	<select id="selectBoardList" resultType="board">
+		SELECT *
+		FROM board
+		<!-- FROM 절 이후 동적 SQL 활용하여 검색타입과 검색어에 따른 WHERE 절 다르게 추가 -->
+		<!-- 
+		[ 동적 SQL 문 ]
+		- 어떤 조건에 따라 실행할 SQL 문장이 다른 SQL 구문
+		- JSTL 에서 조건에 따라 문장을 다르게 실행하는 것과 거의 동일
+		  <c:if>, <c:choose><c:when><c:otherwise> => c: 제거하면 거의 동일
+		
+		조건1) 검색어(searchKeyword)가 널스트링이 아닐 때 WHERE 절 추가 => if 태그 필요
+		조건2) 검색어가 있을 경우 검색타입(searchType)에 따라 컬럼명 다르게 검색
+		       => 복수개의 조건에 따른 동적 SQL문을 작성하기 위해 choose, when, otherwise 태그 필요 
+		
+		< 주의 사항 >
+		MySQL 의 경우 WHERE 에 LIKE 절 조합하여 검색 데이터를 포함하는 레코드 검색 시
+		LIKE '%검색데이터%' 형식으로 지정해야한다.
+		이 때, 마이바티스에서 표현 시 LIKE '%#{검색데이터}%' 형식으로 지정할 경우 오류 발생
+		=> 마이바티스에서 #{데이터} 형식은 자동으로 해당 데이터타입을 감지하여 후처리 수행
+		   ex) 문자열일 경우 자동으로 해당 데이터에 '' 기호를 붙여서 문자열 파라미터로 표기
+		   따라서, '%#{검색데이터}%' 형식으로 지정 시 '%'검색데이터'%' 형태로 변경되어 오류 발생함
+		=> 이런 경우 데이터타입을 감지하지 않도록 #{} 대신 ${} 로 파라미터 지정 가능
+		   ${} 사용 시 전달받은 데이터 형태 그대로 SQL 문장에 전달함
+		   단, 데이터타입 검증이 수행되지 않으므로 SQL 삽입 공격 등 보안 취약점이 발생할 수 있으므로
+		   사용자 입력 데이터는 가급적 ${} 보다 #{} 사용하도록 권장됨!
+		=> 결론> 테이블명, LIKE 절 등에 전달되는 데이터는 ${} 사용하고
+		         외부로부터 입력받는 대부분의 데이터는 #{} 사용하자!
+		=> 결론2> LIKE 절에 % 결합 시 CONCAT() 함수 활용하자!
+		-->
+		<!-- 1. 검색어(searchKeyword) 가 널스트링이 아닐 때 검색어 추가할 WHERE 절 추가 -->
+		<!-- => 검색어 데이터는 searchKeyword 변수에 저장되어 있으므로 변수명 그대로 활용 -->
+		<!-- => 자바 문법과 동일하게 문자열 비교를 equals() 메서드로 수행 -->	
+		<if test="!searchKeyword.equals('')"><!-- 검색어가 있다면 -->
+			WHERE -- 앞에 공통으로 WHERE 절 걸었음
+			<!-- 2. 검색타입(searchType)에 따른 WHERE 절 조건 대상 변경 -->
+			<!-- => searchType 변수의 문자열 비교(subject, content, subject_content, name) -->
+			<choose>
+				<when test="searchType.equals('subject')">
+					<!-- 주의! LIKE 절은 주로 % 기호와 결합하여 문장 포함 여부를 탐색하기 때문에 -->
+					<!-- 주로 '%검색어%' 형식으로 사용해야한다. -->
+					<!-- 이 때, #{파라미터명} 형식으로 지정 시 타입 감지로 인해 문자열은 강제로 "" 기호가 붙음 -->
+					<!-- 따라서, '%"검색어"%' 형식이 되어 문법 오류 발생하므로 타입 감지를 하지 않도록 -->
+					<!-- ${파라미터명} 형식으로 지정해야한다! -->
+<!-- 					board_subject LIKE '%#{searchKeyword}%' --> <!-- '%"검색어"%' -->
+<!-- 					board_subject LIKE '%${searchKeyword}%' --> <!-- '%검색어%' -->
+					<!-- CONCAT() 함수 사용하여 % 기호와 데이터 결합도 가능 -->
+					board_subject LIKE CONCAT('%',#{searchKeyword},'%')<!-- 가급적 띄어쓰기 X -->
+				</when>
+				<when test="searchType.equals('content')">
+<!-- 					board_content LIKE '%${searchKeyword}%' -->
+					board_content LIKE CONCAT('%',#{searchKeyword},'%')
+				</when>
+				<when test="searchType.equals('subject_content')">
+					<!-- 제목&내용으로 검색 시 둘 중 하나의 조건만 만족하면 되므로 OR 조건 결합 -->
+<!-- 					board_subject LIKE '%${searchKeyword}%' -->
+<!-- 					OR board_content LIKE '%${searchKeyword}%' -->
+					board_subject LIKE CONCAT('%',#{searchKeyword},'%')
+					OR board_content LIKE CONCAT('%',#{searchKeyword},'%')
+				</when>
+				<when test="searchType.equals('name')">
+<!-- 					board_name LIKE '%${searchKeyword}%' -->
+<!-- 					board_name LIKE CONCAT('%',#{searchKeyword},'%') -->
+					<!-- 단, 작성자는 정확히 일치하는 아이디만 검색하기 위해 % 제거 -->
+					board_name LIKE #{searchKeyword}
+				</when>
+				<otherwise>
+					1 = 1 -- WHERE 절을 포함하되 조건을 걸고 싶지 않을 경우 활용 가능한 조건식
+				</otherwise>
+			</choose>
+			
+		</if> 
+		 
+		ORDER BY
+			board_re_ref DESC
+			, board_re_seq ASC
+		LIMIT
+			#{startRow}
+			, #{listLimit}
+	</select>
+	
+	<!-- 전체 글 목록 갯수 조회 - SELECT -->
+	<select id="selectBoardListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM board
+	</select>
 </mapper>

@@ -1,5 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<%-- JSTL 에서 제공하는 각종 함수 라이브러리 : functions --%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -33,7 +35,7 @@
 			</tr>
 			<tr>
 				<th>주소</th>
-				<td>${member.address }</td>
+				<td>${member.post_code} ${member.address1} ${member.address2}</td>
 			</tr>
 			<tr>
 				<th>E-Mail</th>
@@ -41,24 +43,27 @@
 			</tr>
 			<tr>
 				<th>직업</th>
-				<td>${member.job }</td>
+				<td>${member.job}</td>
 			</tr>
 			<tr>
 				<th>성별</th>
-				<td>${member.gender }</td>
+				<td>${member.gender}</td>
 			</tr>
 			<tr>
 				<th>취미</th>
-				<td>${member.hobby }</td>
+<%-- 				<td>${member.hobby }</td> --%>
+				<%-- JSTL functions 라이브러리의 replace() 함수를 활용하여 , 를 공백으로 치환 --%>
+				<%-- ${fn:replace(원본문자열, "대상문자열", "치환할문자열")} --%>
+				<td>${fn:replace(member.hobby, ",", " ")}</td>
 			</tr>
 			<tr>
 				<th>가입동기</th>
-				<td>${member.motivation }</td>
+				<td>${member.motivation}</td>
 			</tr>
 			<tr>
 				<td colspan="2" align="center">
-					<input type="button" value="정보수정" onclick="location.href = 'MemberModifyForm.me'">
-					<input type="button" value="회원탈퇴" onclick="location.href = 'MemberWithdrawForm.me'">
+					<input type="button" value="정보수정" onclick="location.href = 'MemberModifyForm'">
+					<input type="button" value="회원탈퇴" onclick="location.href = 'MemberWithdrawForm'">
 					<input type="button" value="돌아가기">
 				</td>
 			</tr>

@@ -138,7 +138,7 @@
 	</header>
 	<article>
 		<h1>회원 정보 수정</h1>
-		<form action="MemberModifyPro.me" method="post" name="joinForm">
+		<form action="MemberModifyPro" method="post" name="joinForm">
 			<table border="1">
 				<tr>
 					<th>이름</th>
@@ -155,22 +155,29 @@
 					</td>
 				</tr>
 				<tr>
+					<th>기존 비밀번호</th>
+					<td>
+						<input type="password" name="passwd" placeholder="8 ~ 16글자" required>
+						<span id="checkPasswdResult"></span>
+					</td>
+				</tr>
+				<tr>
 					<th>새 비밀번호</th>
 					<td>
-						<input type="password" name="passwd" placeholder="8 ~ 16글자(변경시에만 입력)">
-						<span id="checkPasswdResult"></span>
+						<input type="password" name="newPasswd" placeholder="8 ~ 16글자(변경시에만 입력)">
+						<span id="checkNewPasswdResult"></span>
 					</td>
 				</tr>
 				<tr>
 					<th>새 비밀번호확인</th>
 					<td>
-						<input type="password" name="passwd2" placeholder="(변경시에만 입력)">
-						<span id="checkPasswd2Result"></span>
+						<input type="password" name="newPasswd2" placeholder="(변경시에만 입력)">
+						<span id="checkNewPasswd2Result"></span>
 					</td>
 				</tr>
 				<tr>
 					<th>주민번호</th>
-					<td>(변경불가)</td>
+					<td>${member.jumin} (변경불가)</td>
 				</tr>
 				<tr>
 					<th>주소</th>
@@ -190,22 +197,21 @@
 						   => ${배열명[인덱스]}
 						==================================================================
 						--%>
-						<c:set var="arrAddress" value="${fn:split(member.address, '/') }" />
-						<input type="text" name="postCode" id="postCode" value="${arrAddress[0] }" size="6" required>
+						<input type="text" name="post_code" id="postCode" value="${member.post_code}" size="6" required>
 						<input type="button" id="btnSearchAddress" value="주소검색">
 						<br>
-						<input type="text" name="address1" id="address1" value="${arrAddress[1] }" size="25" placeholder="기본주소" required>
+						<input type="text" name="address1" id="address1" value="${member.address1}" size="25" placeholder="기본주소" required>
 						<br>
-						<input type="text" name="address2" id="address2" value="${arrAddress[2] }" size="25" placeholder="상세주소" required>
+						<input type="text" name="address2" id="address2" value="${member.address2}" size="25" placeholder="상세주소" required>
 					</td>
 				</tr>
 				<tr>
 					<th>E-Mail</th>
 					<td>
 						<%-- 이메일 주소 분리("@" 기준)하여 표시 --%>
-						<c:set var="arrEmail" value="${fn:split(member.email, '@') }" />
-						<input type="text" name="email1" value="${arrEmail[0] }" size="8" required> @
-						<input type="text" name="email2" value="${arrEmail[1] }" size="8" required>
+						<c:set var="arrEmail" value="${fn:split(member.email, '@')}" />
+						<input type="text" name="email1" value="${arrEmail[0]}" size="8" required> @
+						<input type="text" name="email2" value="${arrEmail[1]}" size="8" required>
 						<select name="emailDomain">
 							<option value="">직접입력</option>
 							<option value="naver.com">naver.com</option>
