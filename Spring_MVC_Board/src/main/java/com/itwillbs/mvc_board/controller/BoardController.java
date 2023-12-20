@@ -298,7 +298,7 @@ public class BoardController {
 		List<BoardVO> boardList = service.getBoardList(searchType, searchKeyword, startRow, listLimit);
 		// ------------------------------------------------------------------------------
 		// 페이징 처리를 위한 계산 작업
-		// ****************************************************
+		// BoardService - getBoardListCount() 메서드 호출하여 전체 게시물 목록 갯수 조회 요청
 		// => 파라미터 : 검색타입, 검색어
 		// => 리턴타입 : int(listCount)
 		int listCount = service.getBoardListCount(searchType, searchKeyword);
