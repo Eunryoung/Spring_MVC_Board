@@ -84,12 +84,13 @@
 		<form action="BoardList">
 			<%-- 검색타입 목록(셀렉트박스), 검색어(텍스트박스) 추가 --%>
 			<select name="searchType">
-				<option value="subject">제목</option>
-				<option value="content">내용</option>
-				<option value="subject_content">제목&내용</option>
-				<option value="name">작성자</option>
+				<%-- 파라미터로 검색타입 목록이 넘어온게 남아있음(새로고침하면 항목에 맞게 셀렉트 되고 텍스트박스에도 검색 키워드 내용 남아있도록) --%>
+				<option value="subject"<c:if test="${param.searchType eq 'subject' }">selected</c:if>>제목</option>
+				<option value="content"<c:if test="${param.searchType eq 'content' }">selected</c:if>>내용</option>
+				<option value="subject_content" <c:if test="${param.searchType eq 'subject_content' }">selected</c:if>>제목&내용</option>
+				<option value="name" <c:if test="${param.searchType eq 'name' }">selected</c:if>>작성자</option>
 			</select>
-			<input type="text" name="searchKeyword">
+			<input type="text" name="searchKeyword" value="${param.searchKeyword }">
 			<input type="submit" value="검색">
 			<input type="button" value="글쓰기" onclick="location.href='BoardWriteForm'" />
 		</form>
@@ -118,7 +119,7 @@
 							</c:forEach>
 							<img src="${pageContext.request.contextPath }/resources/images/re.gif">
 						</c:if>
-						<%-- 제목 클릭 시 하이퍼링크 설정(BoardDetail.bo) --%>
+						<%-- 제목 클릭 시 하이퍼링크 설정(BoardDetail) --%>
 						<%-- 파라미터 : 글번호(board_num), 페이지번호(pageNum) --%>
 						<a href="BoardDetail?board_num=${board.board_num}&pageNum=${pageNum}">${board.board_subject}</a>
 					</td>
@@ -139,7 +140,7 @@
 		</table>
 	</section>
 	<section id="pageList">
-		<%-- [이전] 버튼 클릭 시 BoardList.bo 서블릿 요청(파라미터 : 현재 페이지번호 - 1) --%>
+		<%-- [이전] 버튼 클릭 시 BoardList 서블릿 요청(파라미터 : 현재 페이지번호 - 1) --%>
 		<%-- 단, 현재 페이지 번호(pageNum) 가 1보다 클 경우에만 동작(아니면 비활성화 처리) --%>
 		<input type="button" value="이전"
 				onclick="location.href = 'BoardList?pageNum=${pageNum - 1}'"
@@ -162,7 +163,7 @@
 			</c:choose>
 		</c:forEach>
 		
-		<%-- [다음] 버튼 클릭 시 BoardList.bo 서블릿 요청(파라미터 : 현재 페이지번호 + 1) --%>
+		<%-- [다음] 버튼 클릭 시 BoardList 서블릿 요청(파라미터 : 현재 페이지번호 + 1) --%>
 		<%-- 단, 현재 페이지 번호(pageNum) 가 최대 페이지번호 보다 작을 경우에만 동작(아니면 비활성화 처리) --%>
 		<input type="button" value="다음" 
 			onclick="location.href = 'BoardList?pageNum=${pageNum + 1}'"
