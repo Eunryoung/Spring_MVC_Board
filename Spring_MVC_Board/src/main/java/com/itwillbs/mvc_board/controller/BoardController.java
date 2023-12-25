@@ -397,17 +397,16 @@ public class BoardController {
 //					// => 파라미터로 업로드 디렉터리명과 서브디렉터리를 포함한 파일명 결합하여 전달
 //					// => Files.deleteIfExists() 메서드 호출하여 파일이 존재할 경우에만 파일 삭제
 //					Path path = Paths.get(saveDir + "/" + dbBoard.getBoard_file1());
-//					// => 위의 작업은 실제 경로 및 파일 조냊 여부와 무관하게 단순 객체만 생성함
-//					Files.deleteIfExists(path); // => IOException try/catch 처리
-//					// -> 서버에서 파일 삭제 부분 블럭처리
+//					// => 위의 작업은 실제 경로 및 파일 존재 여부와 무관하게 단순 객체만 생성함
+//					Files.deleteIfExists(path); // => IOException try/catch 처리(서버에서 파일 삭제 부분 블럭처리)
 //				}
 //				if(!dbBoard.getBoard_file2().equals("")) {
 //					Path path = Paths.get(saveDir + "/" + dbBoard.getBoard_file2());
-//					Files.deleteIfExists(path); // => IOException try/catch 처리
+//					Files.deleteIfExists(path); // => try/catch 처리 이후 if문 부분 복붙해서 file 숫자 바꾸기 
 //				}
 //				if(!dbBoard.getBoard_file3().equals("")) {
 //					Path path = Paths.get(saveDir + "/" + dbBoard.getBoard_file3());
-//					Files.deleteIfExists(path); // => IOException try/catch 처리
+//					Files.deleteIfExists(path); // => try/catch 처리 이후 if문 부분 복붙해서 file 숫자 바꾸기
 //				}
 				// ------------------------------------------------------------------
 				// 파일 삭제에 사용된 중복 코드 제거를 위해 배열 + 반복문 활용
@@ -424,7 +423,6 @@ public class BoardController {
 				}
 				
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
