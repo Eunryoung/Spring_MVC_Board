@@ -150,7 +150,7 @@
 	<!-- 변수명을 keyProperty 속성값으로 지정 시 자동으로 해당 객체 내의 멤버변수에 저장 -->
 	<!-- DB에 한번만 가면 두가지를 다 할수있다 -->
 	<update id="updateReadcount">
-		<!-- ********************************************** 주된 쿼리의 실행 순서가 결정됨 -->
+		<!-- selectKey 태그의 위치와 상관없이 order 속성값에 따라 주된 쿼리의 실행 순서가 결정됨 -->
 		<selectKey keyProperty="board_readcount" resultType="int" order="AFTER">
 			SELECT board_readcount
 			FROM board
@@ -168,16 +168,26 @@
 		WHERE board_num = #{board_num}
 	</delete>
 	
-	<!-- 글 수정 - UPDATE -->
-	<update id="modifyBoard">
+	<!-- 일치하는 레코드 내의 파일명 삭제(널스트링으로 값 수정) - UPDATE -->
+	<!-- 1) 동적 SQL 활용하여 해당 파일명 존재 여부 판별 -->
+	<!-- 2) SQL 구문을 SET 절에 CASE 를 결합하여 해당 문자열 존재 여부 판별-->
+	<!--    board_file1 ~ 3의 파일명이 전달받은 board_file1과 같으면 '', 아니면 기존 파일명 그대로 사용 -->
+	<!--    => SET [변경할컬럼명] = CASE WHEN [조건식] THEN [true일때설정할값] ELSE [false일때설정할값] END  -->
+	<update id="updateBoardFile">
 		UPDATE board
 		SET 
-			board_name = #{board_name}
-			, board_subject = #{board_subject}
-			, board_content = #{board_content}
-			, board_file1 = #{board_file1}
-			, board_file2 = #{board_file2}
-			, board_file3 = #{board_file3}
+			board_file1 = CASE WHEN board_file1 = #{board_file1} THEN '' ELSE board_file1 END, -- 현재 다 board_file1로 넘겨줬음
+			board_file2 = CASE WHEN board_file2 = #{board_file1} THEN '' ELSE board_file2 END,
+			board_file3 = CASE WHEN board_file3 = #{board_file1} THEN '' ELSE board_file3 END
 		WHERE board_num = #{board_num}
+	</update>
+	
+	<!-- 글 수정 - UPDATE -->
+	<!-- 제목, 내용은 무조건 수정하고, 파일명 3개(board_fileX)중 비어있지 않은 항목만 컬럼값 변경 -->
+	<!-- 즉, 파일명 3개를 각각 비교하여 비어있지 않을 경우(null 또는 ""이 아님)에만 SET 절에 추가 -->
+	<!-- ****************************** 동적 sql 숙제~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<update id="updateBoard">
+		UPDATE board
+		
 	</update>
 </mapper>

@@ -101,34 +101,30 @@
 <%-- 						<c:set var="file3_length" value="${fn:length(board.board_file3)}" /> --%>
 <%-- 						${fn:substring(board.board_file3, 20, file3_length)}<br> --%>
 					<%-- =========================================================== --%>
-					
-					
-					<div class = "file">
-						<c:if test="${not empty board.board_file1}"> <%-- 파일이름이 비어있지않다면 아래 내용 표시 --%>
-							<c:set var="original_file_name1" value="${fn:substringAfter(board.board_file1, '_')}"/>
+					<c:if test="${not empty board.board_file1}">
+						<div class="file">
+							<c:set var="original_file_name1" value="${fn:substringAfter(board.board_file1, '_')}"/> <%-- 파일이름이 비어있지않다면 아래 내용 표시 --%>
 							${original_file_name1}
 							<%-- 다운로드 버튼을 활용하여 해당 파일 다운로드 --%>
 							<%-- 버튼에 하이퍼링크 설정하여 download 속성 설정 시 다운로드 가능 --%>
 							<%-- 이 때, download 속성값 지정 시 다운로드 되는 파일명 변경 가능 --%>
 							<a href="${pageContext.request.contextPath }/resources/upload/${board.board_file1}" download="${original_file_name1}"><input type="button" value="다운로드"></a>
-						</c:if>
-					</div>
-					
-					<div class = "file">
-						<c:if test="${not empty board.board_file2}">
+						</div>
+					</c:if>
+					<c:if test="${not empty board.board_file2}">
+						<div class="file">
 							<c:set var="original_file_name2" value="${fn:substringAfter(board.board_file2, '_')}"/>
 							${original_file_name2}
 							<a href="${pageContext.request.contextPath }/resources/upload/${board.board_file2}" download="${original_file_name2}"><input type="button" value="다운로드"></a>
-						</c:if>
-					</div>
-					
-					<div class = "file">
-						<c:if test="${not empty board.board_file3}">
+						</div>
+					</c:if>
+					<c:if test="${not empty board.board_file3}">
+						<div class="file">
 							<c:set var="original_file_name3" value="${fn:substringAfter(board.board_file3, '_')}"/>
 							${original_file_name3}
 							<a href="${pageContext.request.contextPath }/resources/upload/${board.board_file3}" download="${original_file_name3}"><input type="button" value="다운로드"></a>
-						</c:if>
-					</div>
+						</div>
+					</c:if>
 				</td>
 			</tr>
 			</table>
@@ -146,7 +142,7 @@
 		<%-- 답변과 목록 버튼은 항상 표시 --%>
 		<%-- 수정, 삭제 버튼은 세션 아이디가 있고, 작성자 아이디와 세션 아이디가 같을 경우에만 표시 --%>
 		<%-- 단, 세션 아이디가 관리자일 경우에도 수정, 삭제 버튼 표시 --%>
-		<%-- 답변, 수정, 삭제는 BoardXXXForm.bo 서블릿 요청(파라미터 : 글번호, 페이지번호) --%>
+		<%-- 답변, 수정, 삭제는 BoardXXXForm 서블릿 요청(파라미터 : 글번호, 페이지번호) --%>
 		<%-- 답변 : BoardReplyForm, 수정 : BoardModifyForm, 삭제 : BoardDeleteForm --%>
 		<input type="button" value="답변" onclick="location.href='BoardReplyForm?board_num=${board.board_num}&pageNum=${param.pageNum}'">
 		<c:if test="${not empty sessionScope.sId and ((board.board_name eq sessionScope.sId) or (sessionScope.sId eq 'admin'))}">
@@ -158,7 +154,7 @@
 			<input type="button" value="삭제" onclick="confirmDelete()">
 		</c:if>
 		
-		<%-- 목록은 BoardList.bo 서블릿 요청(파라미터 : 페이지번호) --%>
+		<%-- 목록은 BoardList 서블릿 요청(파라미터 : 페이지번호) --%>
 		<input type="button" value="목록" onclick="location.href='BoardList?pageNum=${param.pageNum}'">
 	</section>
 </body>

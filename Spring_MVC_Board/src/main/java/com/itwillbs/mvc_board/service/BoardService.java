@@ -54,8 +54,13 @@ public class BoardService {
 		}
 
 		
+		// 게시물 파일 삭제 요청
+		public int removeBoardFile(BoardVO board) {
+			return mapper.updateBoardFile(board);
+		}
+
 		// 게시물 수정 요청
-		public int modBoard(BoardVO board) {
-			return mapper.modifyBoard(board);
+		public int modifyBoard(BoardVO board) {
+			return mapper.updateBoard(board);
 		}
 }
