@@ -111,7 +111,7 @@
 					<td class="td_left"><label for="board_name">글쓴이</label></td>
 					<td class="td_right">
 						<%-- 작성자(글쓴이)는 편집 불가능하므로 그냥 출력만 수행해도 무관 --%>
-						${board.board_name }
+						<input type="text" name="board_name" value="${board.board_name}" readonly>
 					</td>
 				</tr>
 				<%-- 제목과 내용은 수정이 가능하도록 입력폼으로 표시 --%>

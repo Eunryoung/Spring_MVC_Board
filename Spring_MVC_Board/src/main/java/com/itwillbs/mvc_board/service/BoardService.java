@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.itwillbs.mvc_board.mapper.BoardMapper;
 import com.itwillbs.mvc_board.vo.BoardVO;
@@ -62,5 +63,21 @@ public class BoardService {
 		// 게시물 수정 요청
 		public int modifyBoard(BoardVO board) {
 			return mapper.updateBoard(board);
+		}
+
+		
+		// 답글 등록 요청
+		// => 두 가지 DB 데이터 조작 작업을 위한 메서드 호출하는 과정에서
+		//    트랜잭션을 적용하려면 복수개의 메서드를 호출하는 메서드 상단에
+		//    @Transactional 어노테이션 적용(단, root-context.xml 내에 트랜잭션 설정 필수!)
+		@Transactional
+		public int registReplyBoard(BoardVO board) {
+			// 기존 답글 순서번호 조정을 위해 updateBoardReSeq() 메서드 호출
+			// =>  파라미터 : BoardVO 객체 	 	리턴타입 : void
+			mapper.updateBoardReSeq(board);
+			
+			// 답글 등록 작업을 위해 insertReplyBoard() 메서드 호출
+			// =>  파라미터 : BoardVO 객체 	 	리턴타입 : int
+			return mapper.insertReplyBoard(board);
 		}
 }

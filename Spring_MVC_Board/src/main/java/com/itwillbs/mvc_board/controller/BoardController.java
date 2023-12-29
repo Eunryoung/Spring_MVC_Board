@@ -440,8 +440,11 @@ public class BoardController {
 		
 	}
 	
+	
+	// =======================================================================
+	// "BoardModifyForm" 서블릿 요청에 대한 글 수정 폼 포워딩 처리
 	@GetMapping("BoardModifyForm")
-	public String boardModify(BoardVO board, Model model, HttpSession session) {
+	public String boardModifyForm(BoardVO board, HttpSession session, Model model) {
 		// 글 삭제와 권한 판별 동일
 		// 세션 아이디 없을 경우 처리
 		String sId = (String)session.getAttribute("sId");
@@ -453,30 +456,30 @@ public class BoardController {
 		
 		// BoardService - getBoard() 메서드 재사용하여 게시물 1개 정보 조회
 		// => 조회수가 증가되지 않도록 두번째 파라미터값 false 전달
+		// => 별도의 새로운 BoardVO 타입 변수 선언 없이 기존 BoardVO 타입 변수(board) 재사용
 		board = service.getBoard(board.getBoard_num(), false);
 		
 		// 조회된 게시물의 작성자(board_name)와 세션 아이디가 다를 경우 "잘못된 접근입니다" 처리
-		// => 단, 관리자는 자신의 게시물이 아니더라도 삭제가 가능해야하므로
+		// => 단, 관리자는 자신의 게시물이 아니더라도 수정 가능해야하므로
 		//    세션아이디가 관리자가 아닐 경우라는 조건도 추가
 		if(board == null || !sId.equals(board.getBoard_name()) && !sId.equals("admin")) {
 			model.addAttribute("msg", "잘못된 접근입니다");
 			return "fail_back";
-		}	
+		}
 		
-
-		// Model 객체에 BoardVO 객체 저장
 		model.addAttribute("board", board);
 		
 		return "board/board_modify_form";
 	}
 	
-	// 파일 삭제 AJAX 요청에 대한 응답 데이터 생성 및 전송을 위해 @ResponseBody 지정 
+	// 파일 삭제 AJAX 요청에 대한 응답 데이터 생성 및 전송을 위해 @ResponseBody 지정
 	@ResponseBody
 	@PostMapping("BoardDeleteFile")
 	public String deleteFile(BoardVO board, HttpSession session) {
-//		System.out.println(board);
+//		System.out.println(board.getBoard_num() + ", " + board.getBoard_file1());
 		
 		// BoardService - removeBoardFile() 메서드 호출하여 지정된 파일명 삭제 요청
+		// => 파라미터 : BoardVO 객체   리턴타입 : int(removeCount)
 		int removeCount = service.removeBoardFile(board);
 //		System.out.println(removeCount);
 		
@@ -508,25 +511,25 @@ public class BoardController {
 	@PostMapping("BoardModifyPro")
 	public String modifyPro(
 			BoardVO board, 
-			HttpSession session, 
-			Model model, 
-			@RequestParam(defaultValue = "1") String pageNum) { // 페이지번호 기본값 설정
-		// 세션 아이디 없을 경우 처리
+			@RequestParam(defaultValue = "1") String pageNum, // 페이지번호 기본값 설정
+			HttpSession session, Model model) {
+		// 세션 아이디에 따른 차단 처리
 		String sId = (String)session.getAttribute("sId");
-		if(sId == null) {
+		if(sId == null && board.getBoard_name() == null) {
 			model.addAttribute("msg", "로그인이 필요합니다");
 			// targetURL 속성명으로 로그인 폼 페이지 서블릿 주소 저장
 			model.addAttribute("targetURL", "MemberLoginForm");
 			return "forward";
 		} else if(!sId.equals(board.getBoard_name()) && !sId.equals("admin")) {
+			System.out.println(board.getBoard_name());
 			model.addAttribute("msg", "잘못된 접근입니다");
 			return "fail_back";
 		}
 		
-		// -------------------------------------------------------------------------------------------
+		// -------------------------------------------------------------------
 		// [ 수정 과정에서 파일 업로드 처리 ]
 		String uploadDir = "/resources/upload"; // 가상의 경로(이클립스 프로젝트 상에 생성한 경로)
-		String saveDir = session.getServletContext().getRealPath(uploadDir); 
+		String saveDir = session.getServletContext().getRealPath(uploadDir); // 또는 
 		
 		String subDir = "";
 		LocalDate now = LocalDate.now();
@@ -534,21 +537,19 @@ public class BoardController {
 		subDir = now.format(dtf);
 		
 		saveDir += File.separator + subDir;
-		
+
 		try {
 			Path path = Paths.get(saveDir); // 파라미터로 업로드 경로 전달
 			Files.createDirectories(path); // 파라미터로 Path 객체 전달
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		// ----------------------------------
+		// -------------------
 		System.out.println(board);
-
+		
 		// BoardVO 객체에 전달(저장)된 실제 파일 정보가 관리되는 MultipartFile 타입 객체 꺼내기
 		// => 단, 수정하지 않은 파일(새로 업로드 항목으로 추가된 파일이 아닌 기존 파일)은
 		//    input 태그를 적용받지 않으므로 파일이 전달되지 않음 => 따라서, null 값이 전달됨
-		//    => NullPointerException 오류 발생!
 		MultipartFile mFile1 = board.getFile1();
 		MultipartFile mFile2 = board.getFile2();
 		MultipartFile mFile3 = board.getFile3();
@@ -563,6 +564,7 @@ public class BoardController {
 		String fileName1 = "";
 		String fileName2 = "";
 		String fileName3 = "";
+		
 		if(mFile1 != null && !mFile1.getOriginalFilename().equals("")) {
 			System.out.println("원본파일명1 : " + mFile1.getOriginalFilename());
 			fileName1 = UUID.randomUUID().toString().substring(0, 8) + "_" + mFile1.getOriginalFilename();
@@ -584,10 +586,10 @@ public class BoardController {
 		System.out.println("실제 업로드 파일명1 : " + board.getBoard_file1());
 		System.out.println("실제 업로드 파일명2 : " + board.getBoard_file2());
 		System.out.println("실제 업로드 파일명3 : " + board.getBoard_file3());
-		// 현재 업로드 될 파일들은 서버 임시 디렉터리에 보관 중이며 최종 이동 처리 수행 필요
-		// ------------------------------------------------------------------------------------
+		// 현재 업로드 될 파일들은 서버 임시 디렉토리에 보관중이며 최종 이동 처리 수행 필요
+		// ----------------------------------------------------------------------------------
 		// BoardService - modifyBoard() 메서드 호출하여 글 수정 작업 요청
-		// => 파라미터 : BoardVO 객체 	리턴타입: int(updateCount)
+		// => 파라미터 : BoardVO 객체   리턴타입 : int(updateCount)
 		int updateCount = service.modifyBoard(board);
 		
 		// DB 작업 요청 처리 결과 판별
@@ -613,13 +615,160 @@ public class BoardController {
 			
 			// 글 상세정보 조회 페이지 리다이렉트(파라미터 : 글번호, 페이지번호)
 			return "redirect:/BoardDetail?board_num=" + board.getBoard_num() + "&pageNum=" + pageNum;
-		} else { // 실패 시
+		} else {
 			// "글 수정 실패!" 처리
 			model.addAttribute("msg", "글 수정 실패!");
 			return "fail_back";
 		}
 		
+	}
+	
+	
+	// "BoardReplyForm" 서블릿 요청에 대한 답글 작성 폼 출력
+	// => 기존 게시물 상세정보 조회 후 답글 작성 폼(board/board_reply_form.jsp) 포워딩
+	//    (BoardService - getBoard() 메서드 재사용)
+	// => 글 수정 폼과 파일 관련 처리를 제외하면 동일(파일 표시 작업 불필요)
+	@GetMapping("BoardReplyForm")
+	public String boardReplyForm(HttpSession session, Model model, BoardVO board) {
+		// 글 삭제와 권한 판별 동일
+		// 세션 아이디 없을 경우 처리
+		String sId = (String)session.getAttribute("sId");
+		if(sId == null) {
+			model.addAttribute("msg", "로그인이 필요합니다");
+			model.addAttribute("targetURL", "MemberLoginForm");
+			return "forward";
+		}
 		
-	} 
+		// BoardService - getBoard() 메서드 재사용하여 게시물 1개 정보 조회
+		// => 조회수가 증가되지 않도록 두번째 파라미터값 false 전달
+		// => 별도의 새로운 BoardVO 타입 변수 선언 없이 기존 BoardVO 타입 변수(board) 재사용
+		board = service.getBoard(board.getBoard_num(), false);
+		
+		
+		model.addAttribute("board", board);
+		
+		return "board/board_reply_form";
+	}
+	
+	// "BoardReplyPro" 서블릿 요청에 대한 답글 쓰기 비즈니스 로직 처리
+	@PostMapping("BoardReplyPro")
+	public String boardReplyPro(BoardVO board, HttpSession session, Model model, HttpServletRequest request) {
+		if(session.getAttribute("sId") == null) {
+			model.addAttribute("msg", "로그인이 필요합니다");
+			// targetURL 속성명으로 로그인 폼 페이지 서블릿 주소 저장
+			model.addAttribute("targetURL", "MemberLoginForm");
+			return "forward";
+		}
+		// ---------------------------------------------------------------------------
+		// 작성자 IP 주소 가져오기
+		board.setWriter_ip(request.getRemoteAddr());
+		System.out.println(board.getWriter_ip()); // 0:0:0:0:0:0:0:1
+		// -------------------------------------------------------------------------------------
+		// 실제 파일 업로드를 수행하기 위해 프로젝트 상의 가장 업로드 디렉터리(upload) 생성 필요
+		String uploadDir = "/resources/upload"; // 가상의 경로(이클립스 프로젝트 상에 생성한 경로)
+		// 가상 디렉터리에 대한 실제 경로 알아내기
+		String saveDir = session.getServletContext().getRealPath(uploadDir); 
+		System.out.println("실제 업로드 경로 : " + saveDir);
+		
+		// 업로드 파일들에 대한 관리의 용이성을 증대시키기 위해
+		// 서브(하위) 디렉터리를 활용하여 파일들을 분산 관리 필요
+		// => 날짜별로 파일들을 분류하면 관리가 매우 편함
+		String subDir = "";
+		
+ 		// 날짜별 서브디렉터리 생성
+		LocalDate now = LocalDate.now(); // new 키워드 없이 static 메서드 호출
+		// -------------------------
+		// 2. 날짜 포맷을 "yyyy/MM/dd" 형식으로 변경 
+		
+		// LocalXXX 타입 객체의 날짜 포맷을 변경하려면 java.time.format.DateTimeFormatter 클래스 활용
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+		
+		// 3. 지정한 포맷을 적용하여 날짜 형식 변경한 결과를 변수(subDir)에 저장
+		subDir = now.format(dtf);
+		
+		// 4. 기존 업로드 경로(실제 경로)에 서브디렉토리(날짜 경로) 결합
+		saveDir += File.separator + subDir; // File.separator 대신 / 또는 \ 지정도 가능 (saveDir += "\";)
+		System.out.println(saveDir);
+		// => D:\Spring\workspace_spring5\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Spring_MVC_Board\resources\ upload\2023/12/19
+
+
+		
+		try {
+			// 5. 해당 디렉토리 존재하지 않을 경우 자동 생성
+			// 5-1) Paths.get() 메서드 호출하여 업로드 경로에 해당하는 Path 객체 리턴받기
+			Path path = Paths.get(saveDir); // 파라미터로 업로드 경로 전달
+			
+			// 5-2) Files.createDirectories() 메서드 호출하여 실제 경로 생성
+			// => 이 때, 중간 경로 중 존재하지 않는 경로들을 모두 생성
+			Files.createDirectories(path); // 파라미터로 Path 객체 전달
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// ----------------------------------
+		// BoardVO 객체에 전달(저장)된 실제 파일 정보가 관리되는 MultipartFile 타입 객체 꺼내기
+		MultipartFile mFile1 = board.getFile1();
+		MultipartFile mFile2 = board.getFile2();
+		MultipartFile mFile3 = board.getFile3();
+
+		// ----------------------------------------
+		// [ 파일명 중복방지 대책 ]
+		board.setBoard_file1("");
+		board.setBoard_file2("");
+		board.setBoard_file3("");
+		board.setBoard_file("");
+		
+		String fileName1 = UUID.randomUUID().toString().substring(0, 8) + "_" + mFile1.getOriginalFilename(); // 변수 필요없는 경우 쓰지않아도 됨
+		String fileName2 = UUID.randomUUID().toString().substring(0, 8) + "_" + mFile2.getOriginalFilename(); // 변수 필요없는 경우 쓰지않아도 됨
+		String fileName3 = UUID.randomUUID().toString().substring(0, 8) + "_" + mFile3.getOriginalFilename(); // 변수 필요없는 경우 쓰지않아도 됨
+		
+		if(!mFile1.getOriginalFilename().equals("")) {
+			board.setBoard_file1(subDir + "/" + fileName1);
+		}
+		
+		if(!mFile2.getOriginalFilename().equals("")) {
+			board.setBoard_file2(subDir + "/" + fileName2);
+		}
+		
+		if(!mFile3.getOriginalFilename().equals("")) {
+			board.setBoard_file3(subDir + "/" + fileName3);
+		}
+		System.out.println("실제 업로드 파일명 1 : " + board.getBoard_file1());
+		System.out.println("실제 업로드 파일명 2 : " + board.getBoard_file2());
+		System.out.println("실제 업로드 파일명 3 : " + board.getBoard_file3());
+		
+		// ----------------------------------------------------------------------
+		// BoardService - registReplyBoard() 메서드 호출하여 게시물 등록 작업 요청
+		// => 파라미터 : BoardVO 객체   리턴타입 : int(insertCount)
+		int insertCount = service.registReplyBoard(board); 
+		
+		// 게시물 등록 작업 요청 결과 판별
+		if(insertCount > 0) { // 성공 시
+			try {
+				if(!mFile1.getOriginalFilename().equals("")) {
+					mFile1.transferTo(new File(saveDir, fileName1));
+				}
+				if(!mFile2.getOriginalFilename().equals("")) {
+					mFile2.transferTo(new File(saveDir, fileName2));
+				}
+				if(!mFile3.getOriginalFilename().equals("")) {
+					mFile3.transferTo(new File(saveDir, fileName3));
+				}
+				
+
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			// 글목록(BoardList) 서블릿 리다이렉트
+			return "redirect:/BoardList";
+		} else { // 실패 시
+			// "답글 쓰기 실패!" 메시지 처리(fail_back)
+			model.addAttribute("msg", "답글 쓰기 실패");
+			return "fail_back";
+			
+		}
+	}
 	
 }

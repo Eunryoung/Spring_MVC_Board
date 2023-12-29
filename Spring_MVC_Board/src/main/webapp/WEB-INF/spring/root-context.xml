@@ -2,8 +2,10 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:tx="http://www.springframework.org/schema/tx"
 	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
-		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
 	<!-- 웹과 관련없는 나머지 자원들에 대한 설정을 하는 파일 -->
 	
 	<!-- Root Context: defines shared resources visible to all other web components -->
@@ -52,6 +54,15 @@
 		<!-- 만능문자(*)로 파일명 패턴이 동일한 파일들 지정 --> 
 		<!-- 폴더 경로가 다른 경우 mapper/**/*Mapper.xml로 지정도 가능하다 -->
 	</bean>
+	
+	<!-- >>>>>>>>>>>>>>>>>>> 트랜잭션 설정 추가 <<<<<<<<<<<<<<<<<<<< -->
+	<!-- org.springframework.jdbc.datasource 패키지의 DataSourceTransactionManager 클래스 지정 -->
+	<!-- 내부 property 태그에 2번에서 설정한 DataSource 객체 지정 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<!-- tx:annotation-driven 태그를 통해 위에서 생성한 트랜잭션 관리 객체 지정 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
 	
 	<!-- 4. MyBatis 연동에 사용될 객체(클래스)들의 패키지 위치 지정(기본 루트 패키지 지정) -->
 	<mybatis-spring:scan base-package="com.itwillbs.mvc_board"/>

@@ -47,7 +47,7 @@
 	<!-- 게시판 글 수정 -->
 	<article id="replyForm">
 		<h1>게시판 답글 작성</h1>
-		<form action="BoardReplyPro.bo" name="replyForm" method="post">
+		<form action="BoardReplyPro" name="replyForm" method="post" enctype="multipart/form-data">
 			<%-- 직접 입력받지 않은 글번호, 페이지번호를 폼 파라미터로 함께 전달하기 위해 --%>
 			<%-- input type="hidden" 속성을 활용하여 폼 데이터로 추가 가능 --%>
 			<%-- name 속성에 파라미터 이름, value 속성에 파라미터 값 지정 --%>
@@ -76,6 +76,19 @@
 					<td class="td_left"><label for="board_content">내용</label></td>
 					<td class="td_right">
 						<textarea rows="15" cols="40" name="board_content" required>${board.board_content}</textarea>
+					</td>
+				</tr>
+				<tr>
+					<td class="td_left"><label for="file1">파일첨부</label></td>
+					<td class="td_right">
+						<%-- 파일 첨부 형식은 input 태그 type="file" 속성 활용 --%>
+						<%-- 한 번에 하나의 파일 선택 가능 --%>
+						<input type="file" name="file1" />
+						<input type="file" name="file2" />
+						<input type="file" name="file3" />
+						<br> --------------- <br>
+						<%-- 한 번에 복수개의 파일 선택 시 multiple 속성 추가 --%>
+						<input type="file" name="file" multiple />
 					</td>
 				</tr>
 			</table>

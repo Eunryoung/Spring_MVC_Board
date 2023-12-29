@@ -1,0 +1,148 @@
+<!-- <?xml version="1.0" encoding="UTF-8"?> -->
+<!-- <!DOCTYPE mapper -->
+<!--     PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" -->
+<!--     "https://mybatis.org/dtd/mybatis-3-mapper.dtd"> -->
+<!--  <!-- 매핑에 사용될 MemberMapper 인터페이스를 namespace 속성에 지정 필수! --> -->
+<!--  <mapper namespace="com.itwillbs.mvc_board.mapper.MemberMapper">  -->
+<!-- 	<!--  -->
+<!-- 	[ 회원가입 - INSERT ] -->
+<!-- 	- 회원번호(idx) 컬럼은 자동 증가 컬럼이므로 null 값 전달 -->
+<!-- 	- 가입일(reg_date) 컬럼은 시스템의 현재 날짜 및 시각 활용을 위해 now() 함수 호출 -->
+<!-- 	- 회원 상태(member_status)는 기본값으로 1 전달 -->
+<!-- 	- 이메일 인증 상태(mail_auth_status)는 기본값으로 'N' 전달 -->
+<!-- 	- 주민번호(jumin) 컬럼 데이터는 jumin1, jumin2 파라미터 값을 문자열 결합을 통해 전달 => CONCAT() 함수 활용 -->
+<!-- 	- 이메일(email) 컬럼 데이터는 email1, email2 파라미터 값을 문자열 결합을 통해 전달  => CONCAT() 함수 활용 -->
+<!-- 	 --> -->
+<!-- 	 <insert id="insertMember"> -->
+<!-- 	 	INSERT INTO member -->
+<!-- 	 	VALUES ( -->
+<!-- 	 		null -- 번호(idx) 자동증가 -->
+<!-- 	 		, #{name} -->
+<!-- 	 		, #{id} -->
+<!-- 	 		, #{passwd} -->
+<!-- <!-- 	 		, #{jumin} --> -->
+<!-- 			, CONCAT(#{jumin1}, '-', #{jumin2}) -- jumin1, jumin2 문자열 결합 -->
+<!-- 	 		, #{post_code} -->
+<!-- 	 		, #{address1} -->
+<!-- 	 		, #{address2} -->
+<!-- <!-- 	 		, #{email} --> -->
+<!-- 			, CONCAT(#{email1}, '@', #{email2}) -- email1, email2 문자열 결합 -->
+<!-- 	 		, #{job} -->
+<!-- 	 		, #{gender} -->
+<!-- 	 		, #{hobby} -->
+<!-- 	 		, #{motivation} -->
+<!-- 	 		, now() -->
+<!-- 	 		, 1 -->
+<!-- 	 		, 'N' -->
+<!-- 	 	) -->
+<!-- 	 </insert> -->
+	 
+<!-- 	 <!-- 회원 상세 정보 조회 - SELECT --> -->
+<!-- 	 <!-- member 테이블에 해당하는 레코드 조회(id 일치) --> -->
+<!-- <!-- 	 <select id="selectMember" resultType="com.itwillbs.mvc_board.vo.MemberVO"> --> -->
+<!-- 	 <!-- mybatis-config.xml 파일에 TypeAlias 설정을 통해 타입 축약 시 해당 이름 그대로 사용 --> -->
+<!-- 	 <select id="selectMember" resultType="member">  -->
+<!-- 	 	SELECT * -->
+<!-- 	 	FROM member -->
+<!-- 	 	WHERE id = #{id} -->
+<!-- 	 </select> -->
+	 
+<!-- 	 <!-- 회원 정보 수정 - UPDATE --> -->
+<!-- 	 <!-- @Param 어노테이션을 통해 파라미터 이름을 지정했으므로 #{파라미터명.xxx} 형식으로 객체 접근 --> -->
+<!-- 	 <!-- 단, 새 패스워드(newPasswd)는 null 또는 널스트링이 아닐 경우에만 변경 --> -->
+<!-- 	 <update id="updateMember"> -->
+<!-- 	 	UPDATE member -->
+<!-- 	 	SET  -->
+<!-- 			name = #{member.name} -->
+<!-- 			<!-- 새 패스워드(newPasswd) 존재 여부에 따라 변경 여부 결정 --> -->
+<!-- 			<!-- 주의! 비교에 사용될 파라미터는 #{} 제외하고 표현 --> -->
+<!-- 			<!-- and는 소문자 표기! --> -->
+<!-- 			<if test="newPasswd != null and !newPasswd.equals('')"> -->
+<!-- 				, passwd = #{newPasswd} -- 새 패스워드 존재할 경우 기존 패스워드 변경 -->
+<!-- 			</if> -->
+<!-- 		 	, post_code = #{member.post_code} -->
+<!-- 		 	, address1 = #{member.address1} -->
+<!-- 		 	, address2 = #{member.address2} -->
+<!-- 			, email = CONCAT(#{member.email1}, '@', #{member.email2}) -- email1, email2 문자열 결합 -->
+<!-- 		 	, job = #{member.job} -->
+<!-- 		 	, gender = #{member.gender} -->
+<!-- 		 	, hobby = #{member.hobby} -->
+<!-- 		 	, motivation = #{member.motivation} -->
+<!-- 	 	WHERE -->
+<!-- 	 		id = #{member.id} -->
+<!-- 	 </update> -->
+	 
+<!-- 	 <!-- 회원 탈퇴 - UPDATE --> -->
+<!-- 	 <!-- member 테이블의 member_status 컬럼값을 3(탈퇴) 으로 변경 --> -->
+<!-- 	 <!-- 이 때, 아이디를 제외한 나머지 모든 정보를 초기화(널스트링) 필요 --> -->
+<!-- 	 <!-- 지금은 정보를 다 초기화했지만 원래는 탈퇴일자를 기록해 탈퇴일로 부터 특정 기간이 지나면 스케쥴러로 매일 자정에 조회해 조건에 맞으면 초기화(db삭제) --> -->
+<!-- 	 <update id="updateMemberStatus"> -->
+<!-- 	 	UPDATE member -->
+<!-- 	 	SET  -->
+<!-- 	 		member_status = 3 -->
+<!-- 	 		, name = '' -->
+<!-- 	 		, passwd = '' -->
+<!-- 	 		, jumin = '' -->
+<!-- 	 		, post_code = '' -->
+<!-- 	 		, address1 = '' -->
+<!-- 	 		, address2 = '' -->
+<!-- 	 		, email = '' -->
+<!-- 	 		, job = '' -->
+<!-- 	 		, gender = '' -->
+<!-- 	 		, hobby = '' -->
+<!-- 	 		, motivation = '' -->
+<!-- 	 	WHERE id = #{id} -->
+<!-- 	 </update> -->
+	 
+<!-- 	 <!-- 메일 인증 정보 조회 - SELECT --> -->
+<!-- 	 <!-- id가 일치하는 인증 정보 레코드 조회 --> -->
+<!-- 	 <select id="selectMailAuthInfo" resultType="mailAuthInfo"> -->
+<!-- 	 	SELECT * -->
+<!-- 	 	FROM mail_auth_info -->
+<!-- 	 	WHERE id = #{id} -->
+	 	
+<!-- 	 </select> -->
+	 
+<!-- 	<!-- 새 인증정보 등록 - INSERT --> -->
+<!-- 	 <insert id="insertMailAuthInfo"> -->
+<!-- 	 	INSERT INTO mail_auth_info -->
+<!-- 	 	VALUES ( -->
+<!-- 	 		#{id} -->
+<!-- 	 		, #{auth_code} -->
+<!-- 	 	) -->
+<!-- 	 </insert> -->
+	 
+<!-- 	<!-- 기존 인증정보 갱신 - UPDATE --> -->
+<!-- 	<!-- id 에 해당하는 레코드의 인증코드(auth_code) 컬럼 수정 --> -->
+<!-- 	 <update id="updateMailAuthInfo"> -->
+<!-- 	 	UPDATE mail_auth_info -->
+<!-- 	 	SET auth_code = #{auth_code} -->
+<!-- 	 	WHERE id = #{id} -->
+<!-- 	 </update> -->
+	 
+<!-- 	<!-- 회원 메일 인증상태 변경 - UPDATE --> -->
+<!-- 	<!-- member 테이블의 id 에 해당하는 레코드의 메일인증상태(mail_auth_status) 컬럼값 "Y" 로 변경 --> -->
+<!-- 	 <update id="updateMailAuthStatus"> -->
+<!-- 	 	UPDATE member -->
+<!-- 	 	SET mail_auth_status = 'N' -->
+<!-- 	 	WHERE id = #{id} -->
+<!-- 	 </update> -->
+	 
+<!-- 	<!-- 회원 메일 인증정보 삭제 - DELETE --> -->
+<!-- 	<!-- mail_auth_info 테이블의 id 에 해당하는 레코드 삭제 --> -->
+<!-- 	 <delete id="deleteMailAuthInfo"> -->
+<!-- 	 	DELETE FROM mail_auth_info -->
+<!-- 	 	WHERE id = #{id} -->
+<!-- 	 </delete> -->
+	 
+	 
+<!-- 	 <!-- ========================= 관리자 ============================== --> -->
+<!-- 	 <!-- 회원 목록 조회 - SELECT --> -->
+<!-- <!-- 	 <select id="selectMemberList" resultType="com.itwillbs.mvc_board.vo.MemberVO"> --> -->
+<!-- 	 <!-- mybatis-config.xml 파일에 TypeAlias 설정을 통해 타입 축약 시 해당 이름 그대로 사용 --> -->
+<!-- 	<select id="selectMemberList" resultType="member"> -->
+<!-- 		SELECT * -->
+<!-- 		FROM member -->
+<!-- 		WHERE id != 'admin' -- 관리자 계정을 제외한 나머지 조회 -->
+<!-- 	 </select> -->
+<!--  </mapper> -->

@@ -134,6 +134,23 @@
 		    <version>3.14.0</version>
 		</dependency>
 		
+		<!-- 10. 자바 메일 발송 라이브러리(javax.mail, javax.activation) -->
+		<!-- https://mvnrepository.com/artifact/javax.mail/mail -->
+		<dependency>
+		    <groupId>javax.mail</groupId>
+		    <artifactId>mail</artifactId>
+		    <version>1.4.7</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/javax.activation/activation -->
+		<dependency>
+		    <groupId>javax.activation</groupId>
+		    <artifactId>activation</artifactId>
+		    <version>1.1.1</version>
+		</dependency>
+		
+		
+		
 		
 		<!-- AspectJ -->
 		<dependency>

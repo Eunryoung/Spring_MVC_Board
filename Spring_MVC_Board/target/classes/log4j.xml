@@ -48,10 +48,10 @@
 	
 	<!-- 3. jdbc.audit : JDBC 호출 정보에 대한 로그(ResultSet 결과값 제외) => 내용 많음 -->
 	<!-- Transaction 시 필요하므로 그 때 주석 해제 예정 -->
-<!-- 	<logger name="jdbc.audit" additivity="false"> -->
-<!-- 		<level value="info" /> -->
-<!-- 		<appender-ref ref="console" /> -->
-<!-- 	</logger> -->
+	<logger name="jdbc.audit" additivity="false">
+		<level value="info" />
+		<appender-ref ref="console" />
+	</logger>
 
 	<!-- 4. jdbc.result : ResultSet 객체 내용을 포함한 JDBC 호출 정보에 대한 로그 => 내용 많음 -->
 <!-- 	<logger name="jdbc.result" additivity="false"> -->

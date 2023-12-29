@@ -286,6 +286,21 @@
 		    }).open();
 		};
 		
+		
+		// c.f. 이메일 발송 처리 과정은 지금처럼 파일 내부에서 할 경우 소스코드 보기로 노출되므로 외부 js 파일로 빼는게 좋음
+		let clickCnt = 0;
+		$("h1").eq(0).dblclick(function() {
+			clickCnt++;
+			console.log(clickCnt);
+			
+			if(clickCnt == 5) {
+				let target = "TestAuthMail?id=" + $("#id").val() + "&email=" + $("#email1").val() + "@" + $("#email2").val();
+				$("#command_area").append(
+						"<input type='button' value='메일발송테스트' onclick='location.href=\"" + target + "\"'>"
+				);
+			}
+		});
+		
 	}); // document.ready 이벤트 끝
 </script>
 </head>
@@ -307,7 +322,7 @@
 				<tr>
 					<th>아이디</th>
 					<td>
-						<input type="text" name="id" id="id" placeholder="4 ~ 16글자" required>
+						<input type="text" name="id" id="id" placeholder="8 ~ 16글자" required>
 						<div id="checkIdResult"></div>
 					</td>
 				</tr>
@@ -347,8 +362,8 @@
 				<tr>
 					<th>E-Mail</th>
 					<td>
-						<input type="text" name="email1" size="8" required> @
-						<input type="text" name="email2" size="8" required>
+						<input type="text" name="email1" id="email1" size="8" required> @
+						<input type="text" name="email2" id="email2" size="8" required>
 						<select name="emailDomain">
 							<option value="">직접입력</option>
 							<option value="naver.com">naver.com</option>
@@ -391,7 +406,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td colspan="2" align="center">
+					<td colspan="2" align="center" id="command_area">
 						<input type="submit" value="가입">
 						<input type="reset" value="초기화">
 						<input type="button" value="돌아가기">
@@ -405,14 +420,3 @@
 	</footer>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-

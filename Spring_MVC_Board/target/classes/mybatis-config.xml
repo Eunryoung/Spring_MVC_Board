@@ -8,6 +8,7 @@
 		<!-- <typeAlias type="클래스타입지정" alias="별칭지정"> -->
 		<typeAlias type="com.itwillbs.mvc_board.vo.MemberVO" alias="member"/>
 		<typeAlias type="com.itwillbs.mvc_board.vo.BoardVO" alias="board"/>
+		<typeAlias type="com.itwillbs.mvc_board.vo.MailAuthInfoVO" alias="mailAuthInfo"/>
 	</typeAliases>
 </configuration>
   

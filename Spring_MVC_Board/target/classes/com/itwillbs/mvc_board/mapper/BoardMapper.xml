@@ -185,9 +185,63 @@
 	<!-- 글 수정 - UPDATE -->
 	<!-- 제목, 내용은 무조건 수정하고, 파일명 3개(board_fileX)중 비어있지 않은 항목만 컬럼값 변경 -->
 	<!-- 즉, 파일명 3개를 각각 비교하여 비어있지 않을 경우(null 또는 ""이 아님)에만 SET 절에 추가 -->
-	<!-- ****************************** 동적 sql 숙제~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<update id="updateBoard">
 		UPDATE board
-		
+		SET
+			board_subject = #{board_subject}
+			, board_content = #{board_content}
+			<if test="board_file1 != null and !board_file1.equals('')"> <!-- 파일이름은 ""으로 초기화 해놨기때문에 첫번째 null 체크는 현재 상황에서는 필요없긴함 -->
+				, board_file1 = #{board_file1}
+			</if>
+			<if test="board_file2 != null and !board_file2.equals('')">
+				, board_file2 = #{board_file2}
+			</if>
+			<if test="board_file3 != null and !board_file3.equals('')">
+				, board_file3 = #{board_file3}
+			</if>
+		WHERE board_num = #{board_num}
 	</update>
+	
+	<!--
+	기존 답글 순서번호 조정 - UPDATE
+	=> 참조글번호(board_re_ref)가 대상글의 참조글번호와 같고
+	   순서번호(board_re_seq)가 대상글의 순서번호보다 큰 레코드들의 순서번호를 1씩 증가(+1) 처리
+	-->
+	<update id="updateBoardReSeq">
+		UPDATE board
+		SET
+			board_re_seq = board_re_seq + 1
+		WHERE
+			board_re_ref = #{board_re_ref}
+			AND board_re_seq > #{board_re_seq}
+	</update>
+	
+	<!-- 답글 등록 - INSERT -->
+	<!-- 
+	기본 새 글 등록과 대부분 동일하나, 참조글번호는 전달받은 값 그대로 사용하고
+	순서번호와 들여쓰기레벨 값은 전달받은 값 + 1 값 사용
+	-->
+	<insert id="insertReplyBoard">
+		<selectKey keyProperty="board_num" resultType="int" order="BEFORE"> 
+			SELECT IFNULL(MAX(board_num), 0) -- null이 아닌 경우 0으로 지정해야 INSERT 구문에서 +1 할 것이므로 첫 글이 1번이 된다 
+			FROM board
+		</selectKey>
+		INSERT INTO board
+		VALUES(
+			#{board_num} + 1 -- 미리 조회된 게시물 번호 + 1 값 사용
+			, #{board_name}
+			, #{board_subject}
+			, #{board_content}
+			, #{board_file1}
+			, #{board_file2}
+			, #{board_file3}
+			, #{board_file}
+			, #{board_re_ref}	-- board_re_ref(전달받은 값 사용)
+			, #{board_re_lev} + 1 -- board_re_lev(전달받은 값 + 1)
+			, #{board_re_seq} + 1 -- board_re_seq(전달받은 값 + 1)
+			, 0
+			, now()
+			, #{writer_ip}
+		)
+	</insert>
 </mapper>
