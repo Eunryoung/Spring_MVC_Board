@@ -57,6 +57,7 @@
 			name = #{member.name}
 			<!-- 새 패스워드(newPasswd) 존재 여부에 따라 변경 여부 결정 -->
 			<!-- 주의! 비교에 사용될 파라미터는 #{} 제외하고 표현 -->
+			<!-- and는 소문자 표기! -->
 			<if test="newPasswd != null and !newPasswd.equals('')">
 				, passwd = #{newPasswd}  -- 새 패스워드 존재할 경우 기존 패스워드 변경
 			</if>
@@ -75,6 +76,7 @@
 	<!-- 회원 탈퇴 - UPDATE -->
 	<!-- member 테이블의 member_status 컬럼값을 3(탈퇴) 으로 변경 -->
 	<!-- 이 때, 아이디를 제외한 나머지 모든 정보를 초기화(널스트링) 필요 -->
+	<!-- 지금은 정보를 다 초기화했지만 원래는 탈퇴일자를 기록해 탈퇴일로 부터 특정 기간이 지나면 스케쥴러로 매일 자정에 조회해 조건에 맞으면 초기화(db삭제) -->
 	<update id="updateWithdrawMember">
 		UPDATE member
 		SET	
@@ -133,6 +135,8 @@
 	
 	<!-- =============== 관리자 =============== -->
 	<!-- 회원 목록 조회 - SELECT -->
+<!-- 	 <select id="selectMemberList" resultType="com.itwillbs.mvc_board.vo.MemberVO"> -->
+	 <!-- mybatis-config.xml 파일에 TypeAlias 설정을 통해 타입 축약 시 해당 이름 그대로 사용 -->
 	<select id="selectMemberList" resultType="member">
 		SELECT *
 		FROM member

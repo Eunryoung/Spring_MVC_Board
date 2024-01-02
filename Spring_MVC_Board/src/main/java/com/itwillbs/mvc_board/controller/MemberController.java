@@ -103,19 +103,21 @@ public class MemberController {
 	// "MemberCheckDupId" 요청에 대한 아이디 중복 검사 비즈니스 로직 처리
 	// 응답데이터를 디스패치 또는 리다이렉트 용도가 아닌 응답 데이터 body 로 그대로 활용하려면
 	// @ResponseBody 어노테이션을 적용해야한다! => 응답 데이터를 직접 전송하도록 지정
+	// e.g. return "XXX"; 인 경우 views/XXX.jsp가 아닌 응답데이터 바디인 XXX 데이터로 그대로 취급
 	// => 이 어노테이션은 AJAX 와 상관없이 적용 가능하지만 AJAX 일 때는 대부분 사용
+	//    -> 위 예시의 경우 흰 화면에 XXX만 출력되는 결과
 	@ResponseBody
 	@GetMapping("MemberCheckDupId")
 	public String checkDupId(MemberVO member) {
 //		System.out.println(member.getId());
 
 		// MemberService - getMember() 메서드 호출하여 아이디 조회(기존 메서드 재사용)
-		// (MemberService - getMemberId() 메서드 호출하여 아이디 조회 메서드 정의 가능)
+		// (MemberService - getMemberId() 메서드 호출하여 아이디 조회 메서드 정의 가능 하나 컬럼 하나 가져오나 멤버 전체 가져오나 똑같으므로 재사용)
 		// => 파라미터 : MemberVO 객체 리턴타입 : MemberVO(dbMember)
 		MemberVO dbMember = service.getMember(member);
 
 		// 조회 결과 판별
-		// => MemberVO 객체가 존재할 경우 아이디 중복, 아니면 사용 가능한 아이디
+		// => MemberVO 객체가 존재할 경우(이미 있을 경우) 아이디 중복, 아니면(null 값일 경우) 사용 가능한 아이디
 		if (dbMember == null) { // 사용 가능한 아이디
 			return "false"; // 중복이 아니라는 의미로 "false" 값 전달
 		} else { // 아이디 중복
@@ -134,7 +136,8 @@ public class MemberController {
 		System.out.println("인증코드 : " + auth_code);
 		
 		// MemberService - registMailAuthInfo() 메서드 호출하여 인증 정보 등록 요청
-		// => 파라미터 : 아이디, 인증코드
+		// => 파라미터 : 아이디, 인증코드(이메일도 주는 경우 where 절에 추가로 조건 걸수있다)
+		// => 리턴 안 받을거라서 리턴타입 명시 X
 		service.registMailAuthInfo(member.getId(), auth_code);
 		
 //		return "member/member_join_success";
@@ -186,6 +189,7 @@ public class MemberController {
 
 		// 만약, 회원 상태(member_status)값이 3일 경우
 		// "fail_back" 포워딩 처리("탈퇴한 회원입니다!")
+		// => 필요시 휴면도 마찬가지로 처리
 		if(dbMember.getMember_status() == 3) {
 			model.addAttribute("msg", "탈퇴한 회원입니다!");
 			return "fail_back";
@@ -200,7 +204,7 @@ public class MemberController {
 		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 		// 아이디가 일치하지 않을 경우(null 값) 또는 패스워드 불일치 시
 		// fail_back.jsp 페이지 포워딩("로그인 실패!")
-		if (dbMember == null || !passwordEncoder.matches(member.getPasswd(), dbMember.getPasswd())) {
+		if (dbMember == null || !passwordEncoder.matches(member.getPasswd(), dbMember.getPasswd())) { // 아이디가 없거나 패스워드가 틀렸거나
 			// 로그인 실패 처리
 			model.addAttribute("msg", "로그인 실패!");
 			return "fail_back";
@@ -228,6 +232,7 @@ public class MemberController {
 	public String logout(HttpSession session) {
 		// 세션 초기화
 		session.invalidate();
+		// 메인페이지로 리다이렉트
 		return "redirect:/";
 	}
 
@@ -240,9 +245,18 @@ public class MemberController {
 		// 세션 아이디가 없을 경우 "fail_back" 페이지를 통해 "잘못된 접근입니다" 출력 처리
 		String sId = (String) session.getAttribute("sId");
 		if (sId == null) {
+			// => getAttribute() 메서드의 리턴 타입이 Object 이므로
+			//    세션에 저장된 값이 없는 경우 null 리턴
 			model.addAttribute("msg", "잘못된 접근입니다");
 			return "fail_back";
 		}
+		
+		// 내가 가진 세션 아이디를 멤버 객체에 덮어 쓰는 작업을 언제 수행할지 결정(member_info.jsp 페이지 참고)
+		// => 현재는 세션 아이디를 멤버객체에 덮어쓰지않은 상황
+		//    (member.setId(sId); 작업 아직 수행 안해서 관리자로 로그인해도 id 값을 포함한 member객체가 모두 null임)
+		// => 관리자가 회원 정보 조회를 할때 id값이 파라미터로 넘어가도록 함(?id=의 형태)
+		// => 세션 아이디가 관리자인 경우에만 id 값이 파라미터로 넘어가야하고 
+		//    관리자가 아닌 경우(일반 회원)에는 id 값이 파라미터로 넘어가더라도 현재 세션 아이디(관리자X)를 멤버 객체에 덮어써야한다
 
 		// 만약, 현재 세션이 관리자가 아니거나
 		// 관리자이면서 id 파라미터가 없을 경우(null 또는 널스트링)
@@ -252,9 +266,23 @@ public class MemberController {
 		}
 
 		// MemberService - getMember() 메서드 호출하여 회원 상세정보 조회 요청
-		// => 파라미터 : MemberVO 객체 리턴타입 : MemberVO(dbMember)
+		// => 파라미터 : MemberVO 객체		리턴타입 : MemberVO(dbMember)
+		
+		// c.f. 
+		// 1) 매핑 메서드의 파라미터로 MemberVO 타입을 지정하지 않은 경우
+		//    => public String memberInfo(HttpSession session, Model model) {}
+//				MemberVO member = new MemberVO(); 
+		// => 2. new 키워드로 MemberVO 타입의 객체를 하나 새로 생성해서
+//				member.setId(sId); // 3. 생성된 객체에 세션에 저장된 id 값 저장
+//				MemberVO dbMember = service.getMember(member); // 4. getMember() 메서드로 리턴되는 값을 새로운 MemberVO 객체 변수에 저장
+		// => 1. 서비스 클래스의 메서드를 호출할 때 파라미터로 MemberVO 타입 객체를 넘겨줘야하므로
+		// -------------------------
+		// 2) 혹은 매핑메서드의 파라미터로 MemberVO 객체를 주입
+//				member.setId(sId); // MemberVO 객체에 세션에 저장된 id 값 저장
 		MemberVO dbMember = service.getMember(member);
-
+		// => 서비스 클래스의 getMember() 메서드를 호출해 리턴되는 값을
+		//    같은 객체에 저장하면 안되므로 새로운 MemberVO 객체 변수 만들어 저장
+		
 		// 조회 결과 Model 객체에 저장
 		model.addAttribute("member", dbMember);
 //		System.out.println(dbMember);
@@ -278,8 +306,9 @@ public class MemberController {
 		// 만약, 현재 세션이 관리자가 아니거나
 		// 관리자이면서 id 파라미터가 없을 경우(null 또는 널스트링)
 		// MemberVO 객체의 id 값을 세션 아이디로 교체(덮어쓰기)
+		// (member_info.jsp 페이지의 정보수정버튼 판별식 참고)
 		if(!sId.equals("admin") || (sId.equals("admin") && (member.getId() == null || member.getId().equals("")))) {
-			member.setId(sId);
+			member.setId(sId); // 세션 아이디를 MemberVO 객체에 저장
 		}
 
 		// MemberService - getMember() 메서드 호출하여 회원 상세정보 조회 요청
@@ -303,6 +332,7 @@ public class MemberController {
 	// => 추가로 전달되는 새 패스워드(newPasswd) 값을 전달받을 파라미터 변수 1개 추가(Map 사용 가능)
 	@PostMapping("MemberModifyPro")
 	public String modifyPro(MemberVO member, String newPasswd, HttpSession session, Model model) {
+		// 조작 방지를 위해 세션 검사 수행
 		// 세션 아이디가 없을 경우 "fail_back" 페이지를 통해 "잘못된 접근입니다" 출력 처리
 		String sId = (String) session.getAttribute("sId");
 		if (sId == null) {
@@ -316,7 +346,7 @@ public class MemberController {
 		// 관리자이면서 id 파라미터가 없을 경우(null 또는 널스트링)
 		// MemberVO 객체의 id 값을 세션 아이디로 교체(덮어쓰기)
 		if(!sId.equals("admin") || (sId.equals("admin") && (member.getId() == null || member.getId().equals("")))) {
-			member.setId(sId);
+			member.setId(sId); // 세션 아이디를 MemberVO 객체에 저장
 		} 
 
 		// MemberService - getMember() 메서드 호출하여 회원 정보 조회 요청(패스워드 비교용)
@@ -329,15 +359,16 @@ public class MemberController {
 		if(!sId.equals("admin") || (sId.equals("admin") && (member.getId() == null || member.getId().equals("")))) {
 			// 이 때, 동일한 조건에서 패스워드 검증도 추가로 수행
 			// => 관리자가 다른 회원의 정보를 수정할 경우에는 패스워드 검증 수행 생략됨
-			if (!passwordEncoder.matches(member.getPasswd(), dbMember.getPasswd())) {
+			if (!passwordEncoder.matches(member.getPasswd(), dbMember.getPasswd())) { // 일치하지 않을 경우
 				model.addAttribute("msg", "수정 권한이 없습니다!");
 				return "fail_back";
 			}
 		}
 		
 		// 새 패스워드를 입력받았을 경우 BCryptPasswordEncoder 클래스를 활용하여 암호화 처리
-		if (newPasswd != null && !newPasswd.equals("")) {
-			newPasswd = passwordEncoder.encode(newPasswd);
+		if (newPasswd != null && !newPasswd.equals("")) { // 새 패스워드가 null 값이 아니고 "" 이 아니라면
+			// 파라미터로는 newPasswd 자체는 있어서 입력값이 없을 경우 "" 로 넘어오고 null 값이 넘어올 일은 없어서 newPasswd != null 식은 사실 필요 X  
+			newPasswd = passwordEncoder.encode(newPasswd); // 패스워드 암호화
 		}
 
 		// MemberService - modifyMember() 메서드 호출하여 회원 정보 수정 요청
@@ -347,6 +378,7 @@ public class MemberController {
 		// 회원 정보 수정 요청 결과 판별
 		// => 실패 시 "fail_back" 페이지 포워딩 처리("회원정보 수정 실패!")
 		// => 성공 시 "MemberInfo" 서블릿 리다이렉트
+		//    c.f. MemberInfo로 가려면 파라미터로 id 줘야하지만 현재 세션 아이디를 계속 사용중이므로 줄 필요 X
 		if(updateCount > 0) { // 성공 시
 			// 관리자가 다른 회원 정보 수정 시 MemberInfo 서블릿 주소에 아이디 파라미터 결합
 			if(!sId.equals("admin") || (sId.equals("admin") && (member.getId() == null || member.getId().equals("")))) {
@@ -372,7 +404,8 @@ public class MemberController {
 			model.addAttribute("msg", "잘못된 접근입니다");
 			return "fail_back";
 		}
-
+		
+		// 회원 탈퇴 페이지(member/member_withdraw_form.jsp)로 포워딩
 		return "member/member_withdraw_form";
 	}
 

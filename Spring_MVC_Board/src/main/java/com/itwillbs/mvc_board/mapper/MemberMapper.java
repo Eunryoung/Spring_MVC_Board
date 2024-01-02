@@ -12,7 +12,7 @@ import com.itwillbs.mvc_board.vo.MemberVO;
 public interface MemberMapper {
 
 	// 회원 가입
-	int insertMember(MemberVO member);
+	public abstract int insertMember(MemberVO member); // 추상메서드!!
 
 	// 회원 상세정보 조회
 	MemberVO selectMember(MemberVO member);

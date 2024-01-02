@@ -32,13 +32,15 @@ public class MemberService {
 
 	// 회원정보 수정 요청
 	public int modifyMember(MemberVO member, String newPasswd) {
-		// MemberMapper - updateMember()
+		// MemberMapper - updateMember() 메서드 호출
+		// => 파라미터 : MemberVO 객체, String 타입(newPasswd)		리턴타입 : MemberVO
 		return mapper.updateMember(member, newPasswd);
 	}
 
 	// 회원 탈퇴 요청
 	public int withdrawMember(MemberVO member) {
-		// MemberMapper - updateWithdrawMember()
+		// MemberMapper - updateMemberStatus() 메서드 호출
+		// => 파라미터 : MemberVO 객체 	리턴타입 : int
 		return mapper.updateWithdrawMember(member);
 	}
 
@@ -84,6 +86,7 @@ public class MemberService {
 		
 		// 조회된 인증 정보 존재 여부 판별
 		if(currentAuthInfo != null) { // 존재할 경우(아이디에 해당하는 인증 정보 존재)
+			// => 기본값 false 리턴이므로 true인 경우만 판별하면 됨
 			// 인증메일 하이퍼링크를 통해 전달받은 인증코드와 조회된 인증코드 문자열 비교
 			if(authInfo.getAuth_code().equals(currentAuthInfo.getAuth_code())) {
 				// 1. MemberMapper - updateMailAuthStatus() 메서드 호출하여
