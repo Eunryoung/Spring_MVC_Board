@@ -13,7 +13,7 @@
 <style type="text/css">
 	#articleForm {
 		width: 500px;
-		height: 550px;
+		height: 600px;
 		border: 1px solid red;
 		margin: auto;
 	}
@@ -56,13 +56,106 @@
 		width: 500px;
 		text-align: center;
 	}
+	
+	/* ---------------- 댓글영역 ----------------- */
+	#replyArea {
+		width: 500px;
+		height: 150px;
+		margin: auto;
+		margin-top: 20px;
+		margin-bottom: 50px;
+	}
+	
+	#replyTextarea {
+		width: 400px;
+		height: 50px;
+		resize: none; /* 크기 조절 못하게 막기 */
+		vertical-align: middle;
+	}
+
+	#replySubmit {
+		width: 85px;
+		height: 55px;
+		vertical-align: middle;
+	}
+	
+	#replyListArea {
+		font-size: 12px;
+		margin-top: 20px;
+	}
+	
+	#replyListArea table, tr, td {
+		border: none;	
+	}
+	
+	.replyContent {
+		width: 300px;
+		text-align: left;
+	}
+	
+	.replyContent img {
+		width: 10px;
+		height: 10px;
+	}
+	
+	
+	.replyWriter {
+		width: 80px;
+	}
+
+	.replyDate {
+		width: 100px;
+	}
+	
 </style>
+<script src="${pageContext.request.contextPath }/resources/js/jquery-3.7.1.js"></script>
 <script type="text/javascript">
 	// 삭제 버튼 클릭 시 확인창을 통해 "삭제하시겠습니까?" 출력 후
 	// 확인 버튼 클릭 시 "BoardDelete" 서블릿 요청(파라미터 : 글번호, 페이지번호)
 	function confirmDelete() {
 		if(confirm("삭제하시겠습니까?")) {
 			location.href = "BoardDelete?board_num=${board.board_num}&pageNum=${param.pageNum}"; // 파라미터로 board_num, pageNum 넘김(디스패치 타입)
+		}
+	}
+	
+	// 대댓글 작성 아이콘 클릭 시
+	function reReplyWriteForm(reply_num, reply_re_ref, reply_re_le, reply_re_seq) {
+		console.log(reply_num + ", " + reply_re_ref + ", " + reply_re_le + ", " + reply_re_seq);	
+	}
+	
+	// 댓글 삭제 아이콘 클릭 시
+	function confirmReplyDelete(reply_num) {
+		if(confirm("댓글을 삭제하시겠습니까?")) { // 확인 클릭 시
+			// AJAX 활용하여 BoardTinyReplyDelete 서블릿 요청(파라미터 : 댓글번호)
+			$.ajax({
+				type: "GET",
+				url: "BoardTinyReplyDelete",
+				data: {
+					"reply_num" : reply_num
+				},
+				dataType: "text",
+				success: function(result) {
+					// 댓글 삭제 요청 결과 판별("true"/"false")
+					// => 에이잭스 사용 시 문자열 비교는 위험하다
+					//    $.trim() 메서드 사용하는 습관을 들이는게 좋음
+					//    실습은 그냥 함...
+					if(result == "true") {
+// 						console.log("댓글 삭제 성공!");
+						// 댓글 삭제 성공 시 해당 댓글의 tr 태그 자체 삭제
+						// => replyTr_ 문자열과 댓글번호를 조합하여 id 선택자 지정
+						$("#replyTr_" + reply_num).remove();
+						
+					} else if(result == "false") {
+						alert("댓글 삭제 실패!");
+					} else if(result == "invalidSession") {
+						alert("권한이 없습니다!");
+						return; // 아무 수행도 하지않기위한 return 문
+					}
+				},
+				error: function() {
+					alert("요청 실패!");
+				}
+			});
 		}
 	}
 </script>
@@ -156,6 +249,99 @@
 		
 		<%-- 목록은 BoardList 서블릿 요청(파라미터 : 페이지번호) --%>
 		<input type="button" value="목록" onclick="location.href='BoardList?pageNum=${param.pageNum}'">
+	</section>
+	<section id="replyArea">
+		<form action="BoardTinyReplyWrite" method="post">
+			<input type="hidden" name="board_num" value="${board.board_num }">
+			<input type="hidden" name="pageNum" value="${param.pageNum }">
+			<%-- 만약, 아이디를 전송해야할 경우 reply_name 파라미터 포함 --%>
+			<%-- 단, 현재는 별도의 닉네임 등을 사용하지 않으므로 임시로 세션 아이디 전달 --%>
+			<%-- 세션 아이디는 반드시 전달할 필요는 없다. 컨트롤러에서 세션 객체 이용해 꺼내도 됨. 굳이 파라미터로 전달할 필요는 없음 --%>
+			<%-- 실제로 세션 아이디 사용 시에는 컨트롤러에서 HttpSession 객체를 통해 접근 --%>
+			<input type="hidden" name="reply_name" value="${sessionScope.sId }">
+			
+			<%-- 세션 아이디가 없을 경우(미로그인 시) 댓글 작성 차단 --%>
+			<%-- textarea 및 버튼 disabled 처리 --%>
+			<c:choose>
+				<c:when test="${empty sessionScope.sId }"><%-- 세션 아이디 없음 --%>
+					<textarea id="replyTextarea" name="reply_content" placeholder="로그인한 사용자만 작성 가능합니다" disabled></textarea>
+					<input type="submit" value="댓글쓰기" id="replySubmit" disabled>
+				</c:when>
+				<c:otherwise><%-- 세션 아이디 있음 --%>
+					<textarea id="replyTextarea" name="reply_content" required></textarea>
+					<input type="submit" value="댓글쓰기" id="replySubmit">
+				</c:otherwise>
+			</c:choose>
+			
+		</form>
+		<div id="replyListArea">
+			<%-- 테이블 활용하여 댓글 내용(reply_content), 작성자(reply_name), 작성일시(reply_date) 표시 --%>
+			<table>
+				<%--반복문을 통해 List 객체로부터 Map 객체 꺼내서 출력 --%>
+				<c:forEach var="tinyReplyBoard" items="${tinyReplyBoardList }">
+					<%-- 댓글 1개에 대한 제어(대댓글 작성 폼 표시, 댓글 제거)를 위한 id 값 지정 --%>
+					<%-- 각 댓글(tr 태그)별 고유 id 생성하기 위해 댓글 번호를 id 에 조합 --%>
+					<tr id="replyTr_${tinyReplyBoard.reply_num }">
+						<td class="replyContent">
+							${tinyReplyBoard.reply_content }
+							<%-- 세션 아이디 존재할 경우 대댓글 작성 이미지(reply-icon.png) 추가 --%>
+							<c:if test="${not empty sessionScope.sId }">
+								<%-- 대댓글 작성 아이콘 클릭 시 자바스크립트 함수 reReplyWriteForm() 호출 --%>
+								<%-- 파라미터 : 댓글 번호, 댓글 참조글번호, 댓글 들여쓰기레벨, 댓글 순서번호 --%>
+								<a href="javascript:reReplyWriteForm(${tinyReplyBoard.reply_num }, ${tinyReplyBoard.reply_re_ref }, ${tinyReplyBoard.reply_re_lev }, ${tinyReplyBoard.reply_re_seq })">
+								<%-- a링크 자체의 기능을 살림(javascript임을 명시) --%>
+									<img src="${pageContext.request.contextPath }/resources/images/reply-icon.png">
+								</a>
+								<%-- 또한, 세션 아이디가 댓글 작성자와 동일하거나 관리자일 경우 --%>
+								<%-- 댓글 삭제 이미지(delete-icon.png) 추가 --%>
+								<c:if test="${sessionScope.sId eq 'admin' or sessionScope.sId eq tinyReplyBoard.reply_name }">
+									<%-- 댓글 삭제 아이콘 클릭 시 자바스크립트 함수 confirmReplyDelete() 호출 --%>
+									<%-- 파라미터 : 댓글 번호 --%>
+									<%-- c.f. 파라미터로 작성자도 넘기는게 안전하긴 하다. 
+										 작성자는 문자열이므로 작은 따옴표('') 처리 필요!
+										 하지만 작성자는 파라미터 조작이 가능하므로 
+										 DB에서 셀렉트하고 굳이 작성자를 파라미터로 받지않는다 --%> 
+<%-- 									<a href="javascript:void(0)" onclick="confirmReplyDelete(${tinyReplyBoard.reply_num }, '${tinyReplyBoard.reply_name }')"> --%>
+									<a href="javascript:void(0)" onclick="confirmReplyDelete(${tinyReplyBoard.reply_num })">
+									<%-- void(0) 메서드 함수 호출해(리턴:undefined) 
+										 a 링크 자체는 아무런 동작도 하지않고 나서
+										 자바스크립트 onclick 이벤트 발생 --%>
+										<img src="${pageContext.request.contextPath }/resources/images/delete-icon.png">
+									</a>
+								</c:if>
+							</c:if>
+						</td>
+						<td class="replyWriter">${tinyReplyBoard.reply_name }</td>
+						<%-- Map 객체에서 꺼냈으므로 날짜 형태가 '2024-01-03T10:44:20' --%>
+						<td class="replyDate">
+<%-- 							${tinyReplyBoard.reply_date } --%>
+							<%--
+							만약, 테이블 조회 결과를 Map 타입으로 저장 시 날짜 및 시각 데이터가
+							JAVA 8 부터 지원하는 LocalXXX 타입으로 관리된다! (ex. LocalDate, LocalTime, LocalDateTime)
+							=> 일반 Date 타입에서 사용하는 형태로 파싱 후 다시 포맷 변경하는 작업 필요 
+							=> JSTL fmt 라이브러리의 <fmt:parseDate> 태그 활용하여 파싱 후
+							   <fmt:formatDate> 태그 활용하여 포맷팅 수행
+							=> 1) <fmt:parseDate>
+							      var : 파싱 후 해당 날짜를 다룰 객체명
+							      value : 파싱될 대상 날짜 데이터
+							      pattern : 파싱 대상 날짜 데이터의 형식(이 때, 시각을 표시하는 문자 T 는 단순 문자로 취급하기 위해 'T' 로 표기)
+							      type : 대상 날짜 파싱 타입(time : 시각, date : 날짜, both : 둘 다) --%>
+							 <%-- 주의! pattern은 변경 전이 아닌 변경 후의 pattern!!! --%>
+							 <%-- 가운데 T가 단순 문자임을 알리기위해 pattern에 'T' 명시 --%>
+							 <%--
+								2) <fmt:formatDate>
+								   value : 출력(포맷팅)할 날짜 데이터
+								   pattern : 포맷팅 할 날짜 형식
+							  --%>
+							<fmt:parseDate var="parsedReplyDate" value="${tinyReplyBoard.reply_date }" pattern="yyyy-MM-dd'T'HH:mm" type="both" />
+<%-- 							${parsedReplyDate }  --%> <%-- Wed Jan 03 10:25:00 KST 2024 --%>
+							<%--<fmt:formatDate value="${parsedReplyDate }"/> --%> <%-- 2024. 1. 3. --%>
+							<fmt:formatDate value="${parsedReplyDate }" pattern="MM-dd HH:mm"/>
+						</td>
+					</tr>
+				</c:forEach>
+			</table>
+		</div>
 	</section>
 </body>
 </html>
