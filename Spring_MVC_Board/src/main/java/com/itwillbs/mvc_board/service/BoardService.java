@@ -102,4 +102,16 @@ public class BoardService {
 		public int removeTinyReplyBoard(Map<String, String> map) {
 			return mapper.deleteTinyReplyBoard(map);
 		}
+
+		// 대댓글 등록 요청
+		// => 단, 두 가지 이상의 작업을 수행해야할 경우 트랜잭션 처리
+		@Transactional
+		public int registTinyReReplyBoard(Map<String, String> map) {
+			// 기존 댓글들의 순서 조정
+			// => 단, 댓글들을 작성한 순서대로 나열할 경우(최신 댓글이 아래쪽에 위치할 경우) 불필요
+//			mapper.updateTinyReplyBoardSeq(map);
+			
+			// 대댓글 등록
+			return mapper.insertTinyReReplyBoard(map);
+		}
 }

@@ -45,4 +45,9 @@ public interface BoardMapper {
 
 	int deleteTinyReplyBoard(Map<String, String> map);
 
+	void updateTinyReplyBoardSeq(Map<String, String> map);
+
+	int insertTinyReReplyBoard(Map<String, String> map);
+
+
 }

@@ -298,4 +298,72 @@
 		WHERE
 			reply_num = #{reply_num} 
 	</delete>
+	
+	<!-- 
+	기존 댓글 순서번호 조정 - UPDATE
+	=> 대상글번호(board_num)가 전달받은 번호와 같고,
+	   참조글번호(reply_re_red)가 대상글의 참조글번호와 같고,
+	   순서번호(reply_re_seq)가 대상글의 순서번호보다 큰 레코드들의
+	   순서번호 1씩 증가 처리
+	-->
+	<update id="updateTinyReplyBoardSeq">
+		UPDATE tiny_reply_board
+		SET
+			reply_re_seq = reply_re_seq + 1
+		WHERE
+			board_num = #{board_num}
+			AND reply_re_ref = #{reply_re_ref}
+			AND reply_re_seq > #{reply_re_seq}
+	</update>
+	
+	<!-- 
+	대댓글 등록 - INSERT
+	=> 기본 작업은 댓글 등록과 동일
+	=> 참조글번호는 전달받은 번호 사용
+	   들여쓰기레벨과 순서번호는 전달받은 값 + 1
+	-->
+	<insert id="insertTinyReReplyBoard">
+		<!-- 새 댓글 번호 계산 -->
+		<!-- 대댓글을 순서대로 나열하기 위해 기존 댓글 그룹에서 가장 큰 순서번호 조회 추가-->
+<!-- 		<selectKey keyProperty="reply_num" resultType="int" order="BEFORE"> -->
+<!-- 			SELECT IFNULL(MAX(reply_num), 0) -->
+<!-- 			FROM tiny_reply_board -->
+<!-- 		</selectKey> -->
+		
+		<!--  -->
+		<!-- 
+		2개 이상의 값을 조회하여 새로운 Map 객체에 저장(이름을 result 로 지정)
+		=> 기존 reply_num 의 가장 큰 값 조회 시에는 WHERE 절이 불필요하지만
+		   추가되는 reply_re_seq 의 가장 큰 값 조회 시에는 WHERE 절이 필요하다
+		   따라서, 별도의 서브쿼리를 사용하여 조건을 추가해야함
+		-->
+		<selectKey keyProperty="result" resultType="map" order="BEFORE">
+			SELECT 
+				IFNULL(MAX(reply_num), 0) AS reply_num
+				, (
+					SELECT 
+						IFNULL(MAX(reply_re_seq), 0) 
+					FROM tiny_reply_board
+					WHERE 
+						board_num = #{board_num}
+						AND reply_re_ref = ${reply_re_ref}
+				) AS reply_re_seq
+			FROM tiny_reply_board
+		</selectKey>
+		
+		<!-- selectKey 를 통해 조회된 복수개의 값은 result 라는 이름으로 관리됨 -->
+		INSERT
+		INTO tiny_reply_board
+		VALUES (
+			#{result.reply_num} + 1        -- reply_num(selectKey 로 조회된 값 + 1)
+			, #{board_num}                 -- board_num(전달받은 값 사용)
+			, #{reply_name}                -- reply_name(전달받은 값 사용)
+			, #{reply_content}             -- reply_content(전달받은 값 사용)
+			, #{reply_re_ref}              -- 참조글번호(reply_re_ref)(전달받은 값 사용)
+			, #{reply_re_lev} + 1          -- 들여쓰기레벨(reply_re_lev)(전달받은 값 + 1)
+			, #{result.reply_re_seq} + 1   -- 순서번호(reply_re_seq)(selectKey 로 조회된 값 + 1)
+			, now()                        -- reply_date
+		);
+	</insert>
+	
 </mapper>
