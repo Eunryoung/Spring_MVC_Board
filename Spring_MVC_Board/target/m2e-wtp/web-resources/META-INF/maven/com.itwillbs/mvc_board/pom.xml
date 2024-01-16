@@ -157,6 +157,16 @@
 		    <version>20231013</version>
 		</dependency>
 		
+		<!-- 12. 스프링 JUnit 테스트에 필요한 라이브러리(스프링 기본 버전 공유) -->
+		<!--     단, JUnit 라이브러리는 기본적으로 등록되어 있음(240 ~ 250 라인 정도)-->
+		<!--     해당 JUnit 라이브러리 버전 업 필요 -->
+		<!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-test</artifactId>
+		    <version>${org.springframework-version}</version>
+		    <scope>test</scope>
+		</dependency>
 		
 		
 		<!-- AspectJ -->
@@ -245,10 +255,11 @@
 		</dependency>
 	
 		<!-- Test -->
+		<!-- 테스트 과정에서 사용할 클래스 때문에 4.7(기본) -> 4.13 으로 버전 변경 -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.7</version>
+			<version>4.13</version>
 			<scope>test</scope>
 		</dependency>        
 	</dependencies>

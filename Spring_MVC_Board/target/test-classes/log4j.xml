@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "log4j.dtd">
+<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
 
 	<!-- Appenders -->
@@ -18,7 +18,7 @@
 	<!-- 3rdparty Loggers -->
 	<logger name="org.springframework.core">
 		<level value="info" />
-	</logger>	
+	</logger>
 	
 	<logger name="org.springframework.beans">
 		<level value="info" />
@@ -32,9 +32,43 @@
 		<level value="info" />
 	</logger>
 
+	<!-- 이 부분부터 항목 추가 -->
+	<!-- SQL Logger 추가 -->
+	<!-- 1. jdbc.sqlonly : SQL 쿼리 문장에 대한 로그(전달인자 포함한 문장 표시) -->
+	<logger name="jdbc.sqlonly" additivity="false">
+		<level value="info" />
+		<appender-ref ref="console" />
+	</logger>
+	
+	<!-- 2. jdbc.sqltiming : SQL 문장과 실행에 소요된 시간(밀리초)에 대한 로그 -->
+	<logger name="jdbc.sqltiming" additivity="false">
+		<level value="info" />
+		<appender-ref ref="console" />
+	</logger>
+	
+	<!-- 3. jdbc.audit : JDBC 호출 정보에 대한 로그(ResultSet 결과값 제외) => 내용 많음 -->
+	<!-- Transaction 시 필요하므로 그 때 주석 해제 예정 -->
+<!-- 	<logger name="jdbc.audit" additivity="false"> -->
+<!-- 		<level value="info" /> -->
+<!-- 		<appender-ref ref="console" /> -->
+<!-- 	</logger> -->
+
+	<!-- 4. jdbc.result : ResultSet 객체 내용을 포함한 JDBC 호출 정보에 대한 로그 => 내용 많음 -->
+<!-- 	<logger name="jdbc.result" additivity="false"> -->
+<!-- 		<level value="info" /> -->
+<!-- 		<appender-ref ref="console" /> -->
+<!-- 	</logger> -->
+	
+	<!-- 5. jdbc.resultsettable : SELECT 실행 결과(데이터 테이블 = ResultSet 객체 내용) 에 대한 로그 -->
+	<logger name="jdbc.resultsettable" additivity="false">
+		<level value="info" />
+		<appender-ref ref="console" />
+	</logger>
+	<!-- 여기까지 항목 추가 -->
+
 	<!-- Root Logger -->
 	<root>
-		<priority value="info" />
+		<priority value="warn" />
 		<appender-ref ref="console" />
 	</root>
 	
