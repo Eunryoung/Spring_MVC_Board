@@ -22,16 +22,16 @@
 	</header>
 	<article>
 		<!-- 본문 표시 영역 -->
-		<h1>MVC 게시판</h1>
-		<h3><a href="BoardWriteForm">글쓰기</a></h3>
-		<h3><a href="BoardList">글목록</a></h3>
+		<h1>MVC Board</h1>
+		<h3><a href="BoardWriteForm">Write</a></h3>
+		<h3><a href="BoardList">Show List</a></h3>
 	</article>
 	<footer>
 		<!-- 회사소개 표시 영역(bottom.jsp 페이지 삽입) -->
 		<jsp:include page="./inc/bottom.jsp"></jsp:include>
 		<select name="lang" onchange="location.href='${pageContext.request.contextPath }?lang=' + this.value">
-			<option value="ko-kr">한국어</option>
-			<option value="en-us">영어</option>
+			<option value="ko-kr"<c:if test="${param.lang eq 'ko-kr' }">selected</c:if>>Korean</option>
+			<option value="en-us"<c:if test="${param.lang eq 'en-us' }">selected</c:if>>English</option>
 		</select>
 	</footer>
 </body>

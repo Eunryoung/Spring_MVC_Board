@@ -25,13 +25,16 @@
 		<h1>MVC 게시판</h1>
 		<h3><a href="BoardWriteForm">글쓰기</a></h3>
 		<h3><a href="BoardList">글목록</a></h3>
+		<h3><a href="FintechMain">핀테크 테스트</a></h3>
+		
+		
 	</article>
 	<footer>
 		<!-- 회사소개 표시 영역(bottom.jsp 페이지 삽입) -->
 		<jsp:include page="./inc/bottom.jsp"></jsp:include>
 		<select name="lang" onchange="location.href='${pageContext.request.contextPath }?lang=' + this.value">
-			<option value="ko-kr">한국어</option>
-			<option value="en-us">영어</option>
+			<option value="ko-kr"<c:if test="${param.lang eq 'ko-kr' }">selected</c:if>>한국어</option>
+			<option value="en-us"<c:if test="${param.lang eq 'en-us' }">selected</c:if>>영어</option>
 		</select>
 	</footer>
 </body>
