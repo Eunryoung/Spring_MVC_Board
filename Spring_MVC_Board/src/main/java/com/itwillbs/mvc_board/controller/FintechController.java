@@ -180,7 +180,7 @@ public class FintechController {
 //	public String accountDetail(Map<String, String> map, HttpSession session, Model model) {
 		
 		System.out.println("파라미터로 넘어온 값 확인 : " + map);
-		
+		System.out.println("user_name 확인 : " + map.get("user_name")); // null
 		// 세션아이디가 null 일 경우 로그인 페이지 이동 처리
 		// 엑세스토큰이 null 일 경우 "계좌 인증 필수!" 메세지 출력 후 "forward.jsp" 페이지 포워딩
 		if(session.getAttribute("sId") == null) {
@@ -203,7 +203,7 @@ public class FintechController {
 		
 		// 조회결과(Map 객체, 이름, 계좌번호) 저장
 		model.addAttribute("accountDetail", accountDetail);
-		model.addAttribute("user_name", map.get("user_name"));
+		model.addAttribute("user_name", map.get("account_holder_name"));
 		model.addAttribute("account_num_masked", map.get("account_num_masked"));
 		
 		return "fintech/fintech_account_detail";

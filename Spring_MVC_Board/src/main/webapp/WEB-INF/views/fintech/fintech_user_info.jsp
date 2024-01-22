@@ -54,6 +54,7 @@
 							<input type="hidden" name="fintech_use_num" value="${list.fintech_use_num }">							
 							<input type="hidden" name="account_holder_name" value="${list.account_holder_name }">							
 							<input type="hidden" name="account_num_masked" value="${list.account_num_masked }">							
+<%-- 							<input type="hidden" name="user_name" value="${list.user_name }">							 --%>
 							<input type="submit" value="상세정보">
 						</form>
 					</td>				
