@@ -11,20 +11,6 @@
 <%-- EL 을 활용하여 컨텍스트경로를 얻어와서 절대주소처럼 사용 가능 --%>
 <link href="${pageContext.request.contextPath }/resources/css/default.css" rel="stylesheet" type="text/css">
 <script src="${pageContext.request.contextPath }/resources/js/jquery-3.7.1.js"></script>
-<script>
-function authAccount() {
-	// 새 창을 사용하여 사용자 인증 페이지 요청
-	let requestUri = "https://testapi.openbanking.or.kr/oauth/2.0/authorize?"
-						+ "response_type=code"
-						+ "&client_id=4066d795-aa6e-4720-9383-931d1f60d1a9"
-						+ "&redirect_uri=http://localhost:8081/mvc_board/callback"
-						+ "&scope=login inquiry transfer"
-// 						+ "&state=12345678901234567890123456789012"
-						+ "&state=${sessionScope.state}" // 세션에 저장된 state 값을 사용
-						+ "&auth_type=0";
-	window.open(requestUri, "authWindow", "width=600, height=800");
-}
-</script>
 </head>
 <body>
 	<header>
@@ -34,12 +20,10 @@ function authAccount() {
 	</header>
 	<article>
 		<!-- 본문 표시 영역 -->
-		<input type="button" value="계좌인증" onclick="authAccount()">
-		<!-- 엑세스 토큰이 세션에 존재할 경우 사용자 정보 조회 버튼 표시(FintechUserInfo 서블릿 요청) -->
-		<!-- 단, 계좌인증 버튼은 임시로 항상 표시되도록 아무것도 처리하지 않음 -->
-		<c:if test="${not empty sessionScope.access_token }">
-			<input type="button" value="핀테크 사용자 정보 조회" onclick="location.href='FintechUserInfo'">
-		</c:if>			
+		<h1>핀테크 계좌 상세정보</h1>
+		<%-- accountDetail 객체에 저장된 데이터 출력 --%>
+		<h3>${user_name } 고객님의 계좌 상세정보 (사용자번호 : ${sessionScope.user_seq_no})</h3>
+		${accountDetail}
 	</article>
 	<footer>
 		<!-- 회사소개 표시 영역(bottom.jsp 페이지 삽입) -->
