@@ -3,6 +3,7 @@ package com.itwillbs.mvc_board.handler;
 import java.net.URI;
 import java.util.Map;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -195,6 +197,110 @@ public class BankApiClient {
 					
 		// ResponseEntity 객체의 getBody() 메서드 호출하여 응답 데이터 리턴
 		return responseEntity.getBody();
+	}
+
+	
+	// 2.5. 계좌이체 서비스
+	// 2.5.1. 출금이체 API
+	// https://testapi.openbanking.or.kr/v2.0/transfer/withdraw/fin_num
+	public Map<String, Object> requestWithdraw(Map<String, String> map) {
+		// 1. 사용자 정보 조회 시 엑세스 토큰 값을 헤더에 담아 전송하므로
+		//    org.springframework.http.HttpHeaders 객체 생성 후 
+		//    add() 메서드를 통해 헤더에 정보 추가
+		HttpHeaders headers = new HttpHeaders();
+		// 1-1. 엑세스 토큰 전달
+		// 헤더명 : "Authorization", 헤더값 : "Bearer" 문자열 뒤에 엑세스토큰 결합(공백으로 구분)
+//		headers.add("Authorization", "Bearer " + map.get("access_token"));
+		// 위의 주석 처리한 방식 대신에 다른 방법을 써본다
+		// => 인증에 사용할 토큰을 Bearer 형식으로 전달 시 setBearerAuth() 메서드로 대체 가능
+		headers.setBearerAuth(map.get("access_token"));
+		// 1-2. 컨텐츠 타입 설정(변경)
+		// => setContentType() 메서드를 호출하여 변경할 컨텐츠 타입 지정
+		// => 기본값 : application/x-www-form-urlencoded; charset=UTF-8
+		// => 만약, JSON 타입으로 변경할 경우 MediaType 클래스의 APPLICATION_JSON 상수 활용
+		//    (주의! APPLICATION_JSON_UTF8 은 사용하지 않음 => deprecated 처리됨)
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		
+		// 2. 요청에 필요한 URL 정보 생성 => 문자열로 바로 지정
+		String url = "https://testapi.openbanking.or.kr/v2.0/transfer/withdraw/fin_num";
+		
+		// 3. 요청 파라미터를 JSON 형식 데이터로 생성(기본 라이브러리 org.json 활용)
+		// 3-1) 출금 정보를 저장할 JSONObject 객체 생성
+		JSONObject jo = new JSONObject();
+		
+		// 3-2) JSONObject 객체의 put() 메서드 호출하여 요청 파라미터 저장
+		jo.put("bank_tran_id", bankValueGenerator.getBankTranId()); // 거래고유번호(자동생성)
+		
+		// ------------ 핀테크 이용기관 정보 -------------
+		// 약정계좌번호를 약정계좌관리 메뉴의 "출금계좌" 항목에 등록 필수!
+		jo.put("cntr_account_type", "N"); // 약정 계좌/계정 구분("N" : 계좌, "C" : 계정 => 개념 잘 모르니까 우리는 일단 N으로 고정)
+		jo.put("cntr_account_num", "23062003999"); // 약정 계좌/계정 번호(핀테크 서비스 기관의 계좌번호) => 아이티윌 계좌번호(강사님 샘플 번호)
+		jo.put("dps_print_content", map.get("id")); // 입금계좌인자내역(결제 요청 사용자 아이디 활용) (돈 받는 사람한테 찍히는 내역 => 현재는 아이티윌 계좌에 찍힐 내역, 우리는 사용자 id 출력하기로ㅇㅇ)
+		
+		// ------------ 요청 고객(출금 대상) 정보 ------------
+		jo.put("fintech_use_num", map.get("fintech_use_num")); // 출금계좌 핀테크이용번호
+		jo.put("wd_print_content", "아이티윌_결제"); // 출금계좌인자내역(현재 센터 인증이므로 기관(아이티윌)에서 설정하는 내용 아무거나 적자, 우리는 메시지 자체지정)
+		jo.put("tran_amt", map.get("tran_amt")); // 거래금액
+		jo.put("tran_dtime", bankValueGenerator.getTranDTime()); // 요청일시(자동생성)
+		
+		jo.put("req_client_name", map.get("req_client_name")); // 요청고객 성명(출금계좌 예금주명) => 현 실습에서는 내 이름
+		jo.put("req_client_fintech_use_num", map.get("fintech_use_num")); // 요청고객 핀테크이용번호(출금계좌)
+		// => 주의! 은행기관코드&계좌번호 또는 핀테크이용번호 둘 중 하나만 설정
+		jo.put("req_client_num", map.get("id").toUpperCase()); // 요청고객 회원번호(아이디 활용) => 단, 영문자는 모두 대문자로 변환 
+		jo.put("transfer_purpose", "ST"); // 이체용도(송금(TR), 결제(ST), 충전(RC) 등) 
+
+		// ----------- 수취 고객(실제 최종 입금 대상) 정보 -----------
+		// 최종적으로 이 돈을 수신하는 계좌에 대한 정보
+		// 이 정보(3개)는 피싱 등의 사고 발생 시 지급 정지를 위한 정보(현재 검증수행은 X)
+		// => 현 실습에서는 임의로 강사님 계좌 지정
+		jo.put("recv_client_name", "이연태");
+		jo.put("recv_client_bank_code", "004"); 
+		jo.put("recv_client_account_num", "23062003999"); 
+		
+		logger.info(">>>>>>>>>>>>>>>>>> 출금이체 요청 json 데이터 : " + jo.toString());
+		// >>>>>>>>>>>>>>>>>> 출금이체 요청 json 데이터 
+		// : {"cntr_account_num":"23062003999",
+		// "req_client_name":"임은령",
+		// "transfer_purpose":"ST",
+		// "tran_dtime":"20240124121214",
+		// "bank_tran_id":"M202113854UNUVPMRRUL",
+		// "req_client_num":"ADMIN",
+		// "fintech_use_num":"120211385488932395653894",
+		// "wd_print_content":"아이티윌_결제",
+		// "recv_client_account_num":"",
+		// "dps_print_content":"admin",
+		// "req_client_fintech_use_num":"120211385488932395653894",
+		// "recv_client_name":"",
+		// "cntr_account_type":"N",
+		// "tran_amt":"15000",
+		// "recv_client_bank_code":""}
+
+		// 4. HttpEntity 객체 생성(제네릭타입은 String 지정)
+		//    => 파라미터 : 바디 정보로 사용할 JSON 데이터(문자열로 변환하여 전달), 
+		//                  헤더 정보가 저장되어 있는 HttpHeaders 객체
+		HttpEntity<String> httpEntity = new HttpEntity<String>(jo.toString(), headers);
+		
+		// 5. RestTemplate 객체 생성
+		RestTemplate restTemplate = new RestTemplate();
+		
+		// 6. RestTemplate 객체의 exchange() 메서드 호출하여 HTTP 요청 수행(POST 방식)
+		// => 파라미터 : URL(문자열), 요청방식, HttpEntity 객체, 응답데이터 관리 클래스
+		// => 리턴타입 : ResponseEntity<Map<String, Object>
+		ResponseEntity<Map<String, Object>> responseEntity
+				= restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<Map<String, Object>>() {});
+					
+		// ResponseEntity 객체의 getBody() 메서드 호출하여 응답 데이터 리턴
+		return responseEntity.getBody();
+		
+		/*
+		 * [ 테스트 데이터(출금이체) 등록 방법 ]
+		 * 사용자 일련번호, 핀테크 이용번호 : 자신(요청 고객)의 정보 선택
+		 * => 출금기관 대표코드, 출금 계좌번호 자동으로 입력됨
+		 * 송금인 실명 : req_client_name 값 입력(자신(요청 고객)의 정보 입력)
+		 * 거래금액 : tran_amt 값 입력
+		 * 입금계좌 인자내역 : dps_print_content 값 입력(고객 아이디 전달하도록 설정되어 있음)
+		 * 수취인 성명 : 핀테크 이용기관의 계좌 예금주명 입력(최종 수취인과 다를 수 있음!) => 현 실습에서는 강사님 성함!!!
+		 */
 	}
 	
 }

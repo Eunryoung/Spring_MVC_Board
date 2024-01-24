@@ -203,10 +203,75 @@ public class FintechController {
 		
 		// 조회결과(Map 객체, 이름, 계좌번호) 저장
 		model.addAttribute("accountDetail", accountDetail);
-		model.addAttribute("user_name", map.get("account_holder_name"));
+		model.addAttribute("user_name", map.get("user_name"));
+//		model.addAttribute("user_name", map.get("account_holder_name"));
 		model.addAttribute("account_num_masked", map.get("account_num_masked"));
 		
 		return "fintech/fintech_account_detail";
 		
 	}
+	
+	
+	// 2.5.1. 출금이체 API
+	@PostMapping("BankPayment")
+	public String bankPayment(@RequestParam Map<String, String> map, HttpSession session, Model model) {
+		
+//		logger.info(">>>>>>>>>>>>>>>>> payment : " + map);
+		// >>>>>>>>>>>>>>>>> payment : {fintech_use_num=120211385488932395653894, req_client_name=임은령, tran_amt=15000}
+
+		String id = (String)session.getAttribute("sId");
+		// 세션아이디가 null 일 경우 로그인 페이지 이동 처리
+		// 엑세스토큰이 null 일 경우 "계좌 인증 필수!" 메세지 출력 후 "forward.jsp" 페이지 포워딩
+		if(id == null) {
+			model.addAttribute("msg", "로그인 필수!");
+			model.addAttribute("targetURL", "MemberLoginForm");
+			return "forward";
+		} else if(session.getAttribute("access_token") == null) {
+			model.addAttribute("msg", "계좌 인증 필수!");
+			model.addAttribute("targetURL", "FintechMain");
+			return "forward";
+		}
+		
+		// 요청에 필요한 엑세스토큰과 세션 아이디를 Map 객체에 추가
+		map.put("access_token", (String)session.getAttribute("access_token"));
+		map.put("id", id);
+		
+		// BankService - requestWithdraw() 메서드 호출하여 상품 구매에 대한 지불(출금이체) 요청
+		// => 파라미터 : Map 객체   리턴타입 : Map<String, Object>(withdrawResult)
+		Map<String, Object> withdrawResult = bankService.requestWithdraw(map);
+		logger.info(">>>>>>>>>>>>>>>>>>지불 요청 결과(withdrawResult) : " + withdrawResult);
+		// >>>>>>>>>>>>>>>>>>지불 요청 결과(withdrawResult) 
+		// : {api_tran_id=45357965-dbcb-426b-965a-63b93820e3e3, rsp_code=A0322, rsp_message=미등록된 이용기관 약정 계좌/계정 [입력 정보(23062003999)], api_tran_dtm=20240124121711919}
+		// => 23062003999 이 번호를 입력했는데 테스트데이터에 등록이 안 되어있다는 소리임
+		//    c.f. 등록은 마이페이지 약정계좌관리 입/출금계좌정보에서 가능 -> 다같이 등록할거니까 저장할때는 타이밍 맞춰서 푸시해야함
+		// => "출금"해서 아이티윌에 넣을거니까 마이페이지 약정계좌관리 "출금"계좌정보에 등록  
+		//    (c.f. 강사님 "입금" 계좌 정보 등록 이후에는 똑같은 메시지 나옴)
+		
+		
+		// 강사님 "출금"계좌 정보 등록 이후 메시지
+		// >>>>>>>>>>>>>>>>>>지불 요청 결과(withdrawResult)
+		// : {api_tran_id=710d03b2-ffde-40de-ae19-34dab77be6b9, rsp_code=A0004, rsp_message=요청전문 포맷 에러 [최종수취고객정보가 입력되지 않았습니다.], api_tran_dtm=20240124122213006}
+
+		// BankApiClient.java 파일에서 "recv_client_name", "recv_client_bank_code", "recv_client_account_num" 세가지 항목을 
+		// JSONObject에 put 메서드로 설정 이후 메시지 
+		// >>>>>>>>>>>>>>>>>>지불 요청 결과(withdrawResult) 
+		// : {api_tran_id=01707e85-470d-4bbf-87c9-6c7b26b8dc30, rsp_code=A0002, rsp_message=참가기관 에러 [API업무처리시스템 - 시뮬레이터 응답전문 존재하지 않음], api_tran_dtm=20240124122518590, dps_bank_code_std=002, dps_bank_code_sub=0000000, dps_bank_name=KDB산업은행, dps_account_num_masked=, dps_print_content=admin, dps_account_holder_name=, bank_tran_id=M202113854UIZVR5HKXZ, bank_tran_date=20240124, bank_code_tran=098, bank_rsp_code=818, bank_rsp_message=시뮬레이터　응답전문　조회에　실패하였습니다, fintech_use_num=120211385488932395653894, account_alias=, bank_code_std=002, bank_code_sub=0000000, bank_name=KDB산업은행, account_num_masked=, print_content=적요내용입니다, tran_amt=15000, account_holder_name=, wd_limit_remain_amt=, savings_bank_name=}
+
+		// 이제 테스트 데이터 등록할거임
+		// 마이페이지 - 테스트 정보 관리 - 응답정보관리 - 출금이체 에서 등록(BankApiClient.java 파일 참고)
+		// 테스트 데이터 등록 이후 메시지
+		// >>>>>>>>>>>>>>>>>>지불 요청 결과(withdrawResult)
+		// : {api_tran_id=ee622e19-6a14-4074-b774-390ec1b2f4c0, rsp_code=A0000, rsp_message=, api_tran_dtm=20240124123448183, dps_bank_code_std=097, dps_bank_code_sub=0000000, dps_bank_name=오픈은행, dps_account_num_masked=9876543210987***, dps_print_content=admin, dps_account_holder_name=이연태, bank_tran_id=M202113854UXAPFH0CED, bank_tran_date=20190101, bank_code_tran=097, bank_rsp_code=000, bank_rsp_message=, fintech_use_num=120211385488932395653894, account_alias=임은령테스트, bank_code_std=002, bank_code_sub=0970001, bank_name=KDB산업은행, account_num_masked=20230821***, print_content=통장기재내용, tran_amt=15000, account_holder_name=임은령, wd_limit_remain_amt=9985000, savings_bank_name=}
+		// 한번 더 새로고침하면 wd_limit_remain_amt이 바뀜
+		// wd_limit_remain_amt=9985000 -> wd_limit_remain_amt=9970000
+
+
+		
+		
+		// 요청 결과를 model 객체에 저장
+		model.addAttribute("withdrawResult", withdrawResult);
+		
+		return "fintech/fintech_payment_result";
+	}
+	
 }
