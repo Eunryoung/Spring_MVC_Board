@@ -59,6 +59,22 @@
 						<input type="hidden" name="tran_amt" value="15000">						
 						<input type="submit" value="상품구매(결제)">
 					</form>
+					<form action="BankRefund" method="post">
+						<input type="hidden" name="fintech_use_num" value="${accountDetail.fintech_use_num }">						
+						<input type="hidden" name="req_client_name" value="${user_name }">						
+						<input type="hidden" name="tran_amt" value="5014">						
+						<input type="submit" value="상품구매취소(환불)">
+					</form>
+					<form action="BankTransfer" method="post">
+						<input type="hidden" name="fintech_use_num" value="${accountDetail.fintech_use_num }">						
+						<input type="hidden" name="req_client_name" value="${user_name }">						
+						<input type="hidden" name="tran_amt" value="5114">	
+						<input type="text" name="recv_client_fintech_use_num" value="상대방핀테크이용번호">	
+						<input type="text" name="recv_client_account_num" value="상대방계좌번호">	
+						<input type="text" name="recv_client_bank_code" value="상대방은행코드">	
+						<input type="text" name="recv_client_name" value="상대방예금주명">	
+						<input type="submit" value="송금">
+					</form>
 				</td>
 			</tr>
 		</table>

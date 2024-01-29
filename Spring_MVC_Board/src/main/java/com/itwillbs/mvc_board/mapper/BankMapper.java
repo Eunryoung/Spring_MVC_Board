@@ -24,5 +24,8 @@ public interface BankMapper {
 	// 사용자 토큰 정보 조회
 	Map<String, String> selectBankUserInfo(String id);
 
+	// 관리자 엑세스토큰 조회
+	String selectAdminAccessToken();
+
 	
 }
