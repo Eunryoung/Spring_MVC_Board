@@ -399,7 +399,7 @@ public class FintechController {
 		// 요청 결과를 model 객체에 저장
 		model.addAttribute("transferResult", transferResult);
 		
-		return "fintech/fintech_refund_result";
+		return "fintech/fintech_transfer_result";
 		
 	}
 	

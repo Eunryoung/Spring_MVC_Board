@@ -4,10 +4,20 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee https://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 	<!-- xmlns의 내용 중 한 글자를 대문자로 수정해 버그 없앰 -->
 
+	<!-- 
+	각종 설정에 사용되는 xml 파일들의 위치를 변경할 경우 설정 방법
+	src/main/resources 내의 폴더 생성(config)하여 xml 파일들 이동시킨 후
+	web.xml 내의 각 설정 파일 위치를 변경해야함
+	이 때, src/main/resources 패키지 위치의 경우 classpath:/ 로 지정 가능
+	또한, 각종 설정 파일들을 역할에 맞게 모듈화할 수도 있으므로
+	root-context.xml 과 servlet-context.xml 대신 xxx-context.xml 파일로 지정하기 위해 * 사용
+	-->
+
 	<!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
-		<param-value>/WEB-INF/spring/root-context.xml</param-value>
+<!-- 		<param-value>/WEB-INF/spring/root-context.xml</param-value> -->
+		<param-value>classpath:/config/*-context.xml</param-value>
 	</context-param>
 	
 	<!-- Creates the Spring Container shared by all Servlets and Filters -->
@@ -21,7 +31,8 @@
 		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
 		<init-param>
 			<param-name>contextConfigLocation</param-name>
-			<param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
+<!-- 			<param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value> -->
+			<param-value>classpath:/config/*-context.xml</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
@@ -45,4 +56,11 @@
 		<filter-name>encodingFilter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
+	
+	<!-- 예외 처리 페이지 설정 -->
+	<error-page>
+		<error-code>404</error-code> <!-- 이 에러 발생 시 -->
+		<location>/WEB-INF/views/error/404.jsp</location> <!-- 이 위치의 뷰페이지가 열림 -->
+	</error-page>
+	
 </web-app>
