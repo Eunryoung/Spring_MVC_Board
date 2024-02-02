@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	xmlns:websocket="http://www.springframework.org/schema/websocket"
+	xsi:schemaLocation="http://www.springframework.org/schema/websocket http://www.springframework.org/schema/websocket/spring-websocket-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
+	<!-- 웹소켓 매핑 등의 설정을 위해서는 websocket namespace 필요 -->
+	<!-- 웹소켓 핸들러를 활용하여 웹소켓 연결 요청 매핑 작업 수행(순서 무관) -->
+	<!-- 1) websocket:handlers 태그를 통해 매핑할 주소 지정 및 매핑 클래스 연결 -->
+	<websocket:handlers allowed-origins="*"> <!-- 프로젝트 서버주소만 해야하지만 현 실습에서는 모두 -->
+		<!-- websocket:mapping 태그를 활용하여 매핑 URL 와 매핑 클래스 연결 수행 -->
+		<websocket:mapping path="/echo" handler="wsHandler"/>
+		
+	</websocket:handlers>
 
+	<!-- 2) bean 태그를 통해 매핑할 클래스 지정 -->
+	<bean id="wsHandler" class="com.itwillbs.mvc_board.chat.MyWebSocketHandler" />
 </beans>
